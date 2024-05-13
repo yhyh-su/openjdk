@@ -1569,14 +1569,7 @@ public final class Class<T> implements java.io.Serializable,
                 throw new GenericSignatureFormatError(ex.getMessage());
             }
             Class<?>   returnType       = types.removeLast();
-            Type []    parameterTypes   = types.toArray(GenericInfo.EMPTY_TYPE_ARRAY);
-            Class<?>[] parameterClasses = new Class<?>[parameterTypes.length];
-
-            // Convert Types to Classes; returned types *should*
-            // be class objects since the methodDescriptor's used
-            // don't have generics information
-            for(int i = 0; i < parameterClasses.length; i++)
-                parameterClasses[i] = toClass(parameterTypes[i]);
+            Class<?>[] parameterClasses   = types.toArray(GenericInfo.EMPTY_CLASS_ARRAY);
 
             // Perform access check
             final Class<?> enclosingCandidate = enclosingInfo.getEnclosingClass();
@@ -1728,14 +1721,8 @@ public final class Class<T> implements java.io.Serializable,
             } catch (IllegalArgumentException ex) {
                 throw new GenericSignatureFormatError(ex.getMessage());
             }
-            Type []    parameterTypes   = types.toArray(GenericInfo.EMPTY_TYPE_ARRAY);
-            Class<?>[] parameterClasses = new Class<?>[parameterTypes.length];
-
-            // Convert Types to Classes; returned types *should*
-            // be class objects since the methodDescriptor's used
-            // don't have generics information
-            for(int i = 0; i < parameterClasses.length; i++)
-                parameterClasses[i] = toClass(parameterTypes[i]);
+            types.removeLast();
+            Class<?>[] parameterClasses = types.toArray(GenericInfo.EMPTY_CLASS_ARRAY);
 
             // Perform access check
             final Class<?> enclosingCandidate = enclosingInfo.getEnclosingClass();

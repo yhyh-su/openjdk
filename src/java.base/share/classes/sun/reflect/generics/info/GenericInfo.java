@@ -43,10 +43,17 @@ import java.util.Objects;
 
 import static java.lang.constant.ConstantDescs.CD_Object;
 
-public abstract class GenericInfo<T extends GenericDeclaration> {
+/**
+ * A generic info is a context for signature resolution.
+ * Its subclasses resolve different signatures on demand.
+ *
+ * @param <T> the enclosing generic declaration type
+ */
+public abstract sealed class GenericInfo<T extends GenericDeclaration>
+        permits FieldGenericInfo, GenericDeclInfo {
     final T closestDeclaration;
 
-    public GenericInfo(T closestDecl) {
+    GenericInfo(T closestDecl) {
         this.closestDeclaration = Objects.requireNonNull(closestDecl);
     }
 
@@ -104,6 +111,7 @@ public abstract class GenericInfo<T extends GenericDeclaration> {
 
     public static final TypeVariable<?>[] EMPTY_TYPE_VARS = new TypeVariable<?>[0];
     public static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
+    public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final Signature[] SIG_OBJECT_ARRAY = new Signature[] { Signature.of(CD_Object) };
     private static final Signature[] EMPTY_SIG_ARRAY = new Signature[0];
 
@@ -157,7 +165,7 @@ public abstract class GenericInfo<T extends GenericDeclaration> {
             if (ctor != null)
                 return ctor;
 
-            return cl.getDeclaringClass(); // may return null
+            return cl.getEnclosingClass(); // may return null
         }
         return ((Executable) decl).getDeclaringClass();
     }

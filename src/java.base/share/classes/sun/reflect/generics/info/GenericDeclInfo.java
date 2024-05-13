@@ -33,10 +33,17 @@ import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
 
-public abstract class GenericDeclInfo<T extends GenericDeclaration> extends GenericInfo<T> {
+/**
+ * A generic declaration info is a generic info that itself
+ * declares type variables.
+ *
+ * @param <T> the owner type
+ */
+public abstract sealed class GenericDeclInfo<T extends GenericDeclaration> extends GenericInfo<T>
+        permits ClassGenericInfo, ExecutableGenericInfo {
     private volatile @Stable TypeVariable<T>[] typeVars;
 
-    public GenericDeclInfo(T owner) {
+    GenericDeclInfo(T owner) {
         super(owner);
     }
 
