@@ -85,13 +85,10 @@ import jdk.internal.vm.annotation.ForceInline;
 import jdk.internal.vm.annotation.IntrinsicCandidate;
 import jdk.internal.vm.annotation.Stable;
 
+import sun.invoke.util.BytecodeDescriptor;
 import sun.invoke.util.Wrapper;
-import sun.reflect.generics.factory.CoreReflectionFactory;
-import sun.reflect.generics.factory.GenericsFactory;
-import sun.reflect.generics.repository.ClassRepository;
-import sun.reflect.generics.repository.MethodRepository;
-import sun.reflect.generics.repository.ConstructorRepository;
-import sun.reflect.generics.scope.ClassScope;
+import sun.reflect.generics.info.ClassGenericInfo;
+import sun.reflect.generics.info.GenericInfo;
 import sun.security.util.SecurityConstants;
 import sun.reflect.annotation.*;
 import sun.reflect.misc.ReflectUtil;
@@ -1134,9 +1131,9 @@ public final class Class<T> implements java.io.Serializable,
      */
     @SuppressWarnings("unchecked")
     public TypeVariable<Class<T>>[] getTypeParameters() {
-        ClassRepository info = getGenericInfo();
+        var info = getGenericInfo();
         if (info != null)
-            return (TypeVariable<Class<T>>[])info.getTypeParameters();
+            return info.getTypeVariables();
         else
             return (TypeVariable<Class<T>>[])new TypeVariable<?>[0];
     }
@@ -1188,7 +1185,7 @@ public final class Class<T> implements java.io.Serializable,
      * @since 1.5
      */
     public Type getGenericSuperclass() {
-        ClassRepository info = getGenericInfo();
+        var info = getGenericInfo();
         if (info == null) {
             return getSuperclass();
         }
@@ -1381,7 +1378,7 @@ public final class Class<T> implements java.io.Serializable,
      * @since 1.5
      */
     public Type[] getGenericInterfaces() {
-        ClassRepository info = getGenericInfo();
+        var info = getGenericInfo();
         return (info == null) ?  getInterfaces() : info.getSuperInterfaces();
     }
 
@@ -1564,10 +1561,9 @@ public final class Class<T> implements java.io.Serializable,
             if (!enclosingInfo.isMethod())
                 return null;
 
-            MethodRepository typeInfo = MethodRepository.make(enclosingInfo.getDescriptor(),
-                                                              getFactory());
-            Class<?>   returnType       = toClass(typeInfo.getReturnType());
-            Type []    parameterTypes   = typeInfo.getParameterTypes();
+            var types = BytecodeDescriptor.parseMethod(enclosingInfo.getDescriptor(), getClassLoader());
+            Class<?>   returnType       = types.removeLast();
+            Type []    parameterTypes   = types.toArray(GenericInfo.EMPTY_TYPE_ARRAY);
             Class<?>[] parameterClasses = new Class<?>[parameterTypes.length];
 
             // Convert Types to Classes; returned types *should*
@@ -1720,9 +1716,9 @@ public final class Class<T> implements java.io.Serializable,
             if (!enclosingInfo.isConstructor())
                 return null;
 
-            ConstructorRepository typeInfo = ConstructorRepository.make(enclosingInfo.getDescriptor(),
-                                                                        getFactory());
-            Type []    parameterTypes   = typeInfo.getParameterTypes();
+            var types = BytecodeDescriptor.parseMethod(enclosingInfo.getDescriptor(), getClassLoader());
+            types.removeLast();
+            Type []    parameterTypes   = types.toArray(GenericInfo.EMPTY_TYPE_ARRAY);
             Class<?>[] parameterClasses = new Class<?>[parameterTypes.length];
 
             // Convert Types to Classes; returned types *should*
@@ -3491,28 +3487,22 @@ public final class Class<T> implements java.io.Serializable,
     private native String getGenericSignature0();
 
     // Generic info repository; lazily initialized
-    private transient volatile ClassRepository genericInfo;
-
-    // accessor for factory
-    private GenericsFactory getFactory() {
-        // create scope and factory
-        return CoreReflectionFactory.make(this, ClassScope.make(this));
-    }
+    private transient volatile @Stable ClassGenericInfo<T> genericInfo;
 
     // accessor for generic info repository;
     // generic info is lazily initialized
-    private ClassRepository getGenericInfo() {
-        ClassRepository genericInfo = this.genericInfo;
+    private ClassGenericInfo<T> getGenericInfo() {
+        var genericInfo = this.genericInfo;
         if (genericInfo == null) {
             String signature = getGenericSignature0();
             if (signature == null) {
-                genericInfo = ClassRepository.NONE;
+                genericInfo = ClassGenericInfo.dummy();
             } else {
-                genericInfo = ClassRepository.make(signature, getFactory());
+                genericInfo = new ClassGenericInfo<>(this, signature);
             }
             this.genericInfo = genericInfo;
         }
-        return (genericInfo != ClassRepository.NONE) ? genericInfo : null;
+        return (genericInfo != ClassGenericInfo.dummy()) ? genericInfo : null;
     }
 
     // Annotations handling

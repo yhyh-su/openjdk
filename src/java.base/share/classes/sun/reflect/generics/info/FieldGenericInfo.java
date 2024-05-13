@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,38 +23,33 @@
  * questions.
  */
 
-package sun.reflect.generics.reflectiveObjects;
+package sun.reflect.generics.info;
+
+import jdk.internal.vm.annotation.Stable;
 
 import java.lang.classfile.Signature;
+import java.lang.reflect.GenericSignatureFormatError;
 import java.lang.reflect.Type;
-import sun.reflect.generics.info.GenericInfo;
 
+public final class FieldGenericInfo extends GenericInfo<Class<?>> {
+    private final Signature signature;
+    private volatile @Stable Type type;
 
-/**
- * Common infrastructure for things that lazily generate reflective generics
- * objects.
- * <p> In all these cases, one needs produce a visitor that will, on demand,
- * traverse the stored AST(s) and reify them into reflective objects.
- * The visitor needs to be initialized with a factory, which will be
- * provided when the instance is initialized.
- * The factory should be cached.
- *
-*/
-public abstract class LazyReflectiveObjectGenerator {
-    private final GenericInfo<?> factory; // cached factory
-
-    protected LazyReflectiveObjectGenerator(GenericInfo<?> f) {
-        factory = f;
-    }
-
-    Type[] reifyBounds(Signature[] boundASTs) {
-        final int length = boundASTs.length;
-        final Type[] bounds = new Type[length];
-        // iterate over bound trees, reifying each in turn
-        for (int i = 0; i < length; i++) {
-            bounds[i] = factory.resolve(boundASTs[i]);
+    public FieldGenericInfo(Class<?> closestDecl, String signatureString) {
+        super(closestDecl);
+        Signature signature;
+        try {
+            signature = Signature.parseFrom(signatureString);
+        } catch (IllegalArgumentException ex) {
+            throw new GenericSignatureFormatError(ex.getMessage());
         }
-        return bounds;
+        this.signature = signature;
     }
 
+    public Type getType() {
+        var type = this.type;
+        if (type != null)
+            return type;
+        return this.type = resolve(signature);
+    }
 }
