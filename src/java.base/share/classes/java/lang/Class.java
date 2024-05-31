@@ -44,7 +44,6 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.GenericSignatureFormatError;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -1562,12 +1561,8 @@ public final class Class<T> implements java.io.Serializable,
             if (!enclosingInfo.isMethod())
                 return null;
 
-            List<Class<?>> types;
-            try {
-                types = BytecodeDescriptor.parseMethod(enclosingInfo.getDescriptor(), getClassLoader());
-            } catch (IllegalArgumentException ex) {
-                throw new GenericSignatureFormatError(ex.getMessage());
-            }
+            // Descriptor already validated by VM
+            List<Class<?>> types = BytecodeDescriptor.parseMethod(enclosingInfo.getDescriptor(), getClassLoader());
             Class<?>   returnType       = types.removeLast();
             Class<?>[] parameterClasses   = types.toArray(GenericInfo.EMPTY_CLASS_ARRAY);
 
@@ -1715,12 +1710,8 @@ public final class Class<T> implements java.io.Serializable,
             if (!enclosingInfo.isConstructor())
                 return null;
 
-            List<Class<?>> types;
-            try {
-                types = BytecodeDescriptor.parseMethod(enclosingInfo.getDescriptor(), getClassLoader());
-            } catch (IllegalArgumentException ex) {
-                throw new GenericSignatureFormatError(ex.getMessage());
-            }
+            // Descriptor already validated by VM
+            List<Class<?>> types = BytecodeDescriptor.parseMethod(enclosingInfo.getDescriptor(), getClassLoader());
             types.removeLast();
             Class<?>[] parameterClasses = types.toArray(GenericInfo.EMPTY_CLASS_ARRAY);
 
