@@ -66,7 +66,6 @@ class MalformedAnnotationTest {
                                         .constantPool().utf8Entry("Not a descriptor"))))
                 )));
         var cl = ByteCodeLoader.load("Test", bytes);
-        var cc = cl.getDeclaredAnnotation(ClassCarrier.class);
-        assertThrows(GenericSignatureFormatError.class, cc::value);
+        assertThrows(GenericSignatureFormatError.class, () -> cl.getDeclaredAnnotation(ClassCarrier.class));
     }
 }

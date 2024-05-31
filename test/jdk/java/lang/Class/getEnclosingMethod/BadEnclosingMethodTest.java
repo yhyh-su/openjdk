@@ -34,40 +34,44 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.classfile.ClassFile;
 import java.lang.classfile.attribute.EnclosingMethodAttribute;
-import java.lang.constant.ClassDesc;
-import java.lang.reflect.GenericSignatureFormatError;
+import java.nio.file.Path;
 import java.util.Optional;
 
-import static java.lang.constant.ConstantDescs.CD_Object;
 import static java.lang.constant.ConstantDescs.INIT_NAME;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class BadEnclosingMethodTest {
+class BadEnclosingMethodTest {
 
     private Class<?> loadTestClass(String name, String type) throws Exception {
-        var bytes = ClassFile.of().build(ClassDesc.of("Test"), clb -> {
-            var cp = clb.constantPool();
-            // fake a container
-            var enclosingClass = cp.classEntry(CD_Object); // fake a container class
-            var enclosingMethodName = cp.utf8Entry(name);
-            var enclosingMethodType = cp.utf8Entry(type); // a malformed method type
-            clb.with(EnclosingMethodAttribute.of(enclosingClass, Optional.of(cp.nameAndTypeEntry(
-                    enclosingMethodName, enclosingMethodType
-            ))));
+        class Enclosed {
+        }
+
+        var className = "EnclosingOuter$1Enclosed";
+
+        var cf = ClassFile.of();
+        var cm = cf.parse(Path.of(System.getProperty("test.classes"), className + ".class"));
+
+        var bytes = cf.transform(cm, (cb, ce) -> {
+            if (ce instanceof EnclosingMethodAttribute em) {
+                var cp = cb.constantPool();
+                var enclosingMethodName = cp.utf8Entry(name);
+                var enclosingMethodType = cp.utf8Entry(type); // a malformed method type
+                cb.with(EnclosingMethodAttribute.of(em.enclosingClass(), Optional.of(cp.nameAndTypeEntry(
+                        enclosingMethodName, enclosingMethodType
+                ))));
+            } else {
+                cb.with(ce);
+            }
         });
 
-        return ByteCodeLoader.load("Test", bytes);
+        return new ByteCodeLoader(className, bytes, BadEnclosingMethodTest.class.getClassLoader())
+                .loadClass(className);
     }
 
     @Test
     void testBadTypes() throws Exception {
-        var malformedMethodType = loadTestClass("methodName", "(L[;)V");
-        assertThrows(GenericSignatureFormatError.class,
-                malformedMethodType::getEnclosingMethod);
-
-        var malformedConstructorType = loadTestClass(INIT_NAME, "(L[;)V");
-        assertThrows(GenericSignatureFormatError.class,
-                malformedConstructorType::getEnclosingConstructor);
+        assertThrows(ClassFormatError.class, () -> loadTestClass("methodName", "(L[;)V"));
+        assertThrows(ClassFormatError.class, () -> loadTestClass(INIT_NAME, "(L[;)V"));
 
         var absentMethodType = loadTestClass("methodName", "(Ldoes/not/Exist;)V");
         assertThrows(TypeNotPresentException.class,

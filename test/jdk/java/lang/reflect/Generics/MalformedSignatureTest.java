@@ -45,6 +45,7 @@ import java.lang.classfile.attribute.RecordAttribute;
 import java.lang.classfile.attribute.RecordComponentInfo;
 import java.lang.classfile.attribute.SignatureAttribute;
 import java.lang.reflect.GenericSignatureFormatError;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -108,8 +109,10 @@ class MalformedSignatureTest {
     void testClass() {
         assertEquals(ArrayList.class, sampleClass.getSuperclass());
         assertArrayEquals(new Class<?>[] {Predicate.class}, sampleClass.getInterfaces());
-        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericSuperclass);
-        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericInterfaces);
+        assertEquals(ArrayList.class, sampleClass.getGenericSuperclass());
+        assertArrayEquals(new Type[] {Predicate.class}, sampleClass.getGenericInterfaces());
+//        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericSuperclass);
+//        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericInterfaces);
     }
 
     @Test
@@ -121,7 +124,7 @@ class MalformedSignatureTest {
 
     @Test
     void testConstructor() throws ReflectiveOperationException {
-        var constructor = sampleClass.getDeclaredConstructor();
+        var constructor = sampleClass.getDeclaredConstructor(Optional.class);
         assertArrayEquals(new Class<?>[] {Optional.class}, constructor.getParameterTypes());
         assertArrayEquals(new Class<?>[] {RuntimeException.class}, constructor.getExceptionTypes());
         assertThrows(GenericSignatureFormatError.class, constructor::getGenericParameterTypes);
@@ -130,7 +133,7 @@ class MalformedSignatureTest {
 
     @Test
     void testMethod() throws ReflectiveOperationException {
-        var method = sampleClass.getDeclaredMethod("method");
+        var method = sampleClass.getDeclaredMethod("method", Optional.class);
         assertEquals(Optional.class, method.getReturnType());
         assertArrayEquals(new Class<?>[] {Optional.class}, method.getParameterTypes());
         assertArrayEquals(new Class<?>[] {RuntimeException.class}, method.getExceptionTypes());

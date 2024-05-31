@@ -37,6 +37,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.lang.classfile.ClassFile;
+import java.lang.classfile.ClassTransform;
+import java.lang.classfile.MethodTransform;
+import java.lang.classfile.attribute.ExceptionsAttribute;
 import java.lang.classfile.components.ClassRemapper;
 import java.lang.constant.ClassDesc;
 import java.lang.reflect.TypeVariable;
@@ -57,12 +60,14 @@ class TypeNotPresentInSignatureTest {
         var compiledDir = Path.of(System.getProperty("test.classes"));
         var cf = ClassFile.of();
 
-        var absentClassTransform = ClassRemapper.of(Map.of(
-                ClassDesc.of("java.lang.RuntimeException"), ClassDesc.of("does.not.Exist")));
+        var reDesc = ClassDesc.of("java.lang.RuntimeException");
+        var fix = ClassRemapper.of(Map.of(reDesc, ClassDesc.of("does.not.Exist")))
+                .andThen(ClassTransform.transformingMethods(MethodTransform
+                        .dropping(ExceptionsAttribute.class::isInstance)));
 
-        var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), absentClassTransform);
+        var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), fix);
         sampleClass = ByteCodeLoader.load("SampleClass", plainBytes);
-        var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), absentClassTransform);
+        var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), fix);
         sampleRecord = ByteCodeLoader.load("SampleRecord", recordBytes);
     }
 
@@ -84,9 +89,9 @@ class TypeNotPresentInSignatureTest {
 
     @Test
     void testConstructor() throws ReflectiveOperationException {
-        var constructor = sampleClass.getDeclaredConstructor();
+        var constructor = sampleClass.getDeclaredConstructor(Optional.class);
         assertArrayEquals(new Class<?>[] {Optional.class}, constructor.getParameterTypes());
-        assertArrayEquals(new Class<?>[] {RuntimeException.class}, constructor.getExceptionTypes());
+        assertArrayEquals(new Class<?>[0], constructor.getExceptionTypes());
         assertThrows(TypeNotPresentException.class, constructor::getGenericParameterTypes);
         var typeVar = (TypeVariable<?>) constructor.getGenericExceptionTypes()[0];
         assertThrows(TypeNotPresentException.class, typeVar::getBounds);
@@ -94,10 +99,10 @@ class TypeNotPresentInSignatureTest {
 
     @Test
     void testMethod() throws ReflectiveOperationException {
-        var method = sampleClass.getDeclaredMethod("method");
+        var method = sampleClass.getDeclaredMethod("method", Optional.class);
         assertEquals(Optional.class, method.getReturnType());
         assertArrayEquals(new Class<?>[] {Optional.class}, method.getParameterTypes());
-        assertArrayEquals(new Class<?>[] {RuntimeException.class}, method.getExceptionTypes());
+        assertArrayEquals(new Class<?>[0], method.getExceptionTypes());
         assertThrows(TypeNotPresentException.class, method::getGenericReturnType);
         assertThrows(TypeNotPresentException.class, method::getGenericParameterTypes);
         var typeVar = (TypeVariable<?>) method.getGenericExceptionTypes()[0];
