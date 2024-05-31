@@ -34,7 +34,9 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.classfile.ClassFile;
 import java.lang.classfile.attribute.EnclosingMethodAttribute;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.constant.ConstantDescs.INIT_NAME;
@@ -42,14 +44,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BadEnclosingMethodTest {
 
-    private Class<?> loadTestClass(String name, String type) throws Exception {
-        class Enclosed {
-        }
+    private static Path classPath(String className) {
+        return Path.of(System.getProperty("test.classes"), className + ".class");
+    }
 
-        var className = "EnclosingOuter$1Enclosed";
+    private Class<?> loadTestClass(String name, String type) throws Exception {
+        var outerName = "Encloser";
+        var className = outerName + "$1Enclosed";
 
         var cf = ClassFile.of();
-        var cm = cf.parse(Path.of(System.getProperty("test.classes"), className + ".class"));
+        var cm = cf.parse(classPath(className));
 
         var bytes = cf.transform(cm, (cb, ce) -> {
             if (ce instanceof EnclosingMethodAttribute em) {
@@ -64,7 +68,12 @@ class BadEnclosingMethodTest {
             }
         });
 
-        return new ByteCodeLoader(className, bytes, BadEnclosingMethodTest.class.getClassLoader())
+        var map = Map.of(
+                outerName, Files.readAllBytes(classPath(outerName)),
+                className, bytes
+        );
+
+        return new ByteCodeLoader(map, BadEnclosingMethodTest.class.getClassLoader())
                 .loadClass(className);
     }
 
@@ -80,5 +89,12 @@ class BadEnclosingMethodTest {
         var absentConstructorType = loadTestClass(INIT_NAME, "(Ldoes/not/Exist;)V");
         assertThrows(TypeNotPresentException.class,
                 absentConstructorType::getEnclosingConstructor);
+    }
+}
+
+class Encloser {
+    private static void work() {
+        class Enclosed {
+        }
     }
 }

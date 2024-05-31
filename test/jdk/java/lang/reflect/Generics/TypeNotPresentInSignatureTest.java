@@ -43,6 +43,7 @@ import java.lang.classfile.attribute.ExceptionsAttribute;
 import java.lang.classfile.components.ClassRemapper;
 import java.lang.constant.ClassDesc;
 import java.lang.reflect.TypeVariable;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
@@ -66,6 +67,7 @@ class TypeNotPresentInSignatureTest {
                         .dropping(ExceptionsAttribute.class::isInstance)));
 
         var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), fix);
+        Files.write(Path.of("tmp.class"), plainBytes);
         sampleClass = ByteCodeLoader.load("SampleClass", plainBytes);
         var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), fix);
         sampleRecord = ByteCodeLoader.load("SampleRecord", recordBytes);

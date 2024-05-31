@@ -228,7 +228,6 @@ public class SignatureParser {
      */
     private FormalTypeParameter[] parseFormalTypeParameters(){
         List<FormalTypeParameter> ftps = new ArrayList<>(3);
-        assert(current() == '<'); // should not have been called at all
         if (current() != '<') { throw error("expected '<'");}
         advance();
         ftps.add(parseFormalTypeParameter());
@@ -297,7 +296,6 @@ public class SignatureParser {
      *     "L" PackageSpecifier_opt SimpleClassTypeSignature ClassTypeSignatureSuffix* ";"
      */
     private ClassTypeSignature parseClassTypeSignature(){
-        assert(current() == 'L');
         if (current() != 'L') { throw error("expected a class type");}
         advance();
         List<SimpleClassTypeSignature> scts = new ArrayList<>(5);
@@ -374,7 +372,6 @@ public class SignatureParser {
      */
     private TypeArgument[] parseTypeArguments() {
         List<TypeArgument> tas = new ArrayList<>(3);
-        assert(current() == '<');
         if (current() != '<') { throw error("expected '<'");}
         advance();
         tas.add(parseTypeArgument());
@@ -426,7 +423,6 @@ public class SignatureParser {
      *     "T" Identifier ";"
      */
     private TypeVariableSignature parseTypeVariableSignature() {
-        assert(current() == 'T');
         if (current() != 'T') { throw error("expected a type variable usage");}
         advance();
         TypeVariableSignature ts = TypeVariableSignature.make(parseIdentifier());
@@ -497,7 +493,6 @@ public class SignatureParser {
             advance();
             return BooleanSignature.make();
         default: {
-            assert(false);
             throw error("expected primitive type");
         }
         }
@@ -626,7 +621,6 @@ public class SignatureParser {
      *     "^" TypeVariableSignature
      */
     private FieldTypeSignature parseThrowsSignature() {
-        assert(current() == '^');
         if (current() != '^') { throw error("expected throws signature");}
         advance();
         return parseFieldTypeSignature(false);

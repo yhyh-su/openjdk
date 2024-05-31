@@ -46,6 +46,7 @@ import java.lang.classfile.attribute.RecordComponentInfo;
 import java.lang.classfile.attribute.SignatureAttribute;
 import java.lang.reflect.GenericSignatureFormatError;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -100,6 +101,7 @@ class MalformedSignatureTest {
         };
 
         var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), badSignatureTransform);
+        Files.write(Path.of("tmp.class"), plainBytes);
         sampleClass = ByteCodeLoader.load("SampleClass", plainBytes);
         var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), badSignatureTransform);
         sampleRecord = ByteCodeLoader.load("SampleRecord", recordBytes);
@@ -124,7 +126,7 @@ class MalformedSignatureTest {
 
     @Test
     void testConstructor() throws ReflectiveOperationException {
-        var constructor = sampleClass.getDeclaredConstructor(Optional.class);
+        var constructor = sampleClass.getDeclaredConstructors()[0];
         assertArrayEquals(new Class<?>[] {Optional.class}, constructor.getParameterTypes());
         assertArrayEquals(new Class<?>[] {RuntimeException.class}, constructor.getExceptionTypes());
         assertThrows(GenericSignatureFormatError.class, constructor::getGenericParameterTypes);
@@ -133,7 +135,7 @@ class MalformedSignatureTest {
 
     @Test
     void testMethod() throws ReflectiveOperationException {
-        var method = sampleClass.getDeclaredMethod("method", Optional.class);
+        var method = sampleClass.getDeclaredMethods()[0];
         assertEquals(Optional.class, method.getReturnType());
         assertArrayEquals(new Class<?>[] {Optional.class}, method.getParameterTypes());
         assertArrayEquals(new Class<?>[] {RuntimeException.class}, method.getExceptionTypes());
