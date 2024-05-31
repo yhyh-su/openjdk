@@ -45,8 +45,6 @@ import java.lang.classfile.attribute.RecordAttribute;
 import java.lang.classfile.attribute.RecordComponentInfo;
 import java.lang.classfile.attribute.SignatureAttribute;
 import java.lang.reflect.GenericSignatureFormatError;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -101,7 +99,6 @@ class MalformedSignatureTest {
         };
 
         var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), badSignatureTransform);
-        Files.write(Path.of("tmp.class"), plainBytes);
         sampleClass = ByteCodeLoader.load("SampleClass", plainBytes);
         var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), badSignatureTransform);
         sampleRecord = ByteCodeLoader.load("SampleRecord", recordBytes);
@@ -111,10 +108,8 @@ class MalformedSignatureTest {
     void testClass() {
         assertEquals(ArrayList.class, sampleClass.getSuperclass());
         assertArrayEquals(new Class<?>[] {Predicate.class}, sampleClass.getInterfaces());
-        assertEquals(ArrayList.class, sampleClass.getGenericSuperclass());
-        assertArrayEquals(new Type[] {Predicate.class}, sampleClass.getGenericInterfaces());
-//        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericSuperclass);
-//        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericInterfaces);
+        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericSuperclass);
+        assertThrows(GenericSignatureFormatError.class, sampleClass::getGenericInterfaces);
     }
 
     @Test
