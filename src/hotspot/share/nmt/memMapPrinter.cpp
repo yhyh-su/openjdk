@@ -172,7 +172,7 @@ static bool vma_touches_thread_stack(const void* from, const void* to, const Thr
   // Very rarely however is a VMA backing a thread stack folded together with another adjacent VMA by the
   // kernel. That can happen, e.g., for non-java threads that don't have guard pages.
   // Therefore we go for the simplest way here and check for intersection between VMA and thread stack.
-  // If the sack size is zero (i.e. no stack assigned yet), then return false.
+  // If the stack size is zero (i.e. no stack assigned yet), then return false.
   if (t->stack_size() == 0) return false;
   return range_intersects(from, to, (const void*)t->stack_end(), (const void*)t->stack_base());
 }
