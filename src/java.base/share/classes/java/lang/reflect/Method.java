@@ -92,6 +92,8 @@ public final class Method extends Executable {
     // If this branching structure would ever contain cycles, deadlocks can
     // occur in annotation code.
     private Method              root;
+    // Hash code of this object
+    private int                 hash;
 
     // Generics infrastructure
     private String getGenericSignature() {return signature;}
@@ -157,21 +159,6 @@ public final class Method extends Executable {
                                 annotations, parameterAnnotations, annotationDefault);
         res.root = this;
         // Might as well eagerly propagate this if already present
-        res.methodAccessor = methodAccessor;
-        return res;
-    }
-
-    /**
-     * Make a copy of a leaf method.
-     */
-    Method leafCopy() {
-        if (this.root == null)
-            throw new IllegalArgumentException("Can only leafCopy a non-root Method");
-
-        Method res = new Method(clazz, name, parameterTypes, returnType,
-                exceptionTypes, modifiers, slot, signature,
-                annotations, parameterAnnotations, annotationDefault);
-        res.root = root;
         res.methodAccessor = methodAccessor;
         return res;
     }
@@ -371,7 +358,13 @@ public final class Method extends Executable {
      * method's declaring class name and the method's name.
      */
     public int hashCode() {
-        return getDeclaringClass().getName().hashCode() ^ getName().hashCode();
+        int hc = hash;
+
+        if (hc == 0) {
+            hc = hash = getDeclaringClass().getName().hashCode() ^ getName()
+                .hashCode();
+        }
+        return hc;
     }
 
     /**
@@ -752,7 +745,7 @@ public final class Method extends Executable {
      *     {@link Class} and no definition can be found for the
      *     default class value.
      * @since  1.5
-     * @jls 9.6.2 Defaults for Annotation Type Elements
+     * @jls 9.6.2 Defaults for Annotation Interface Elements
      */
     public Object getDefaultValue() {
         if  (annotationDefault == null)
