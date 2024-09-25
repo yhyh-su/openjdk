@@ -98,9 +98,9 @@ class MalformedSignatureTest {
             }
         };
 
-        var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), badSignatureTransform);
+        var plainBytes = cf.transformClass(cf.parse(compiledDir.resolve("SampleClass.class")), badSignatureTransform);
         sampleClass = ByteCodeLoader.load("SampleClass", plainBytes);
-        var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), badSignatureTransform);
+        var recordBytes = cf.transformClass(cf.parse(compiledDir.resolve("SampleRecord.class")), badSignatureTransform);
         sampleRecord = ByteCodeLoader.load("SampleRecord", recordBytes);
     }
 

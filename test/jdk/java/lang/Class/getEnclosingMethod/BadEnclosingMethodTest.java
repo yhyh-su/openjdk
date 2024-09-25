@@ -55,7 +55,7 @@ class BadEnclosingMethodTest {
         var cf = ClassFile.of();
         var cm = cf.parse(classPath(className));
 
-        var bytes = cf.transform(cm, (cb, ce) -> {
+        var bytes = cf.transformClass(cm, (cb, ce) -> {
             if (ce instanceof EnclosingMethodAttribute em) {
                 var cp = cb.constantPool();
                 var enclosingMethodName = cp.utf8Entry(name);

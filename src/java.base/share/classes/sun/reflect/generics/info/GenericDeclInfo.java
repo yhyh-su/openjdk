@@ -101,6 +101,6 @@ public abstract sealed class GenericDeclInfo<T extends GenericDeclaration> exten
             if (tv != null)
                 return tv;
         }
-        return null;
+        throw new TypeNotPresentException(name, null);
     }
 }

@@ -69,11 +69,11 @@ class TypeNotPresentInSignatureTest {
             }
         });
 
-        var plainBytes = cf.transform(cf.parse(compiledDir.resolve("SampleClass.class")), fix);
-        plainBytes = cf.transform(cf.parse(plainBytes), f2);
+        var plainBytes = cf.transformClass(cf.parse(compiledDir.resolve("SampleClass.class")), fix);
+        plainBytes = cf.transformClass(cf.parse(plainBytes), f2);
         sampleClass = ByteCodeLoader.load("SampleClass", plainBytes);
-        var recordBytes = cf.transform(cf.parse(compiledDir.resolve("SampleRecord.class")), fix);
-        recordBytes = cf.transform(cf.parse(recordBytes), f2);
+        var recordBytes = cf.transformClass(cf.parse(compiledDir.resolve("SampleRecord.class")), fix);
+        recordBytes = cf.transformClass(cf.parse(recordBytes), f2);
         sampleRecord = ByteCodeLoader.load("SampleRecord", recordBytes);
     }
 

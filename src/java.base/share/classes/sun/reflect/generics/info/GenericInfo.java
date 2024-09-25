@@ -60,7 +60,7 @@ public abstract sealed class GenericInfo<T extends GenericDeclaration>
     public final Type resolve(Signature signature) {
         return switch (signature) {
             case Signature.BaseTypeSig baseTypeSig -> Wrapper
-                    .forPrimitiveType(baseTypeSig.baseType())
+                    .forBasicType(baseTypeSig.baseType())
                     .primitiveType();
             case Signature.ArrayTypeSig arrayTypeSig -> {
                 var component = resolve(arrayTypeSig.componentSignature());
@@ -152,7 +152,7 @@ public abstract sealed class GenericInfo<T extends GenericDeclaration>
                 return tv;
             }
         }
-        return null;
+        throw new TypeNotPresentException(name, null);
     }
 
     static GenericDeclaration findParent(GenericDeclaration decl) {
