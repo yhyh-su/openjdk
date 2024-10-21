@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -616,6 +616,19 @@ public final class Utils {
                 Integer.parseInt(System.getProperty(name, String.valueOf(defaultValue))));
     }
 
+    public static int getIntegerNetProperty(String property, int min, int max, int defaultValue, boolean log) {
+        int value =  Utils.getIntegerNetProperty(property, defaultValue);
+        // use default value if misconfigured
+        if (value < min || value > max) {
+            if (log && Log.errors()) {
+                Log.logError("Property value for {0}={1} not in [{2}..{3}]: " +
+                        "using default={4}", property, value, min, max, defaultValue);
+            }
+            value = defaultValue;
+        }
+        return value;
+    }
+
     public static SSLParameters copySSLParameters(SSLParameters p) {
         SSLParameters p1 = new SSLParameters();
         p1.setAlgorithmConstraints(p.getAlgorithmConstraints());
@@ -625,7 +638,12 @@ public final class Utils {
         p1.setMaximumPacketSize(p.getMaximumPacketSize());
         // JDK 8 EXCL END
         p1.setEndpointIdentificationAlgorithm(p.getEndpointIdentificationAlgorithm());
-        p1.setNeedClientAuth(p.getNeedClientAuth());
+        if (p.getNeedClientAuth()) {
+            p1.setNeedClientAuth(true);
+        }
+        if (p.getWantClientAuth()) {
+            p1.setWantClientAuth(true);
+        }
         String[] protocols = p.getProtocols();
         if (protocols != null) {
             p1.setProtocols(protocols.clone());
@@ -633,7 +651,6 @@ public final class Utils {
         p1.setSNIMatchers(p.getSNIMatchers());
         p1.setServerNames(p.getServerNames());
         p1.setUseCipherSuitesOrder(p.getUseCipherSuitesOrder());
-        p1.setWantClientAuth(p.getWantClientAuth());
         return p1;
     }
 
@@ -742,6 +759,7 @@ public final class Utils {
     }
 
     public static long remaining(ByteBuffer[] bufs) {
+        if (bufs == null) return 0;
         long remain = 0;
         for (ByteBuffer buf : bufs) {
             remain += buf.remaining();
@@ -750,6 +768,7 @@ public final class Utils {
     }
 
     public static boolean hasRemaining(List<ByteBuffer> bufs) {
+        if (bufs == null) return false;
         for (ByteBuffer buf : bufs) {
             if (buf.hasRemaining())
                 return true;
@@ -758,6 +777,7 @@ public final class Utils {
     }
 
     public static boolean hasRemaining(ByteBuffer[] bufs) {
+        if (bufs == null) return false;
         for (ByteBuffer buf : bufs) {
             if (buf.hasRemaining())
                 return true;
@@ -766,6 +786,7 @@ public final class Utils {
     }
 
     public static long remaining(List<ByteBuffer> bufs) {
+        if (bufs == null) return 0L;
         long remain = 0;
         for (ByteBuffer buf : bufs) {
             remain += buf.remaining();
@@ -774,12 +795,14 @@ public final class Utils {
     }
 
     public static long synchronizedRemaining(List<ByteBuffer> bufs) {
+        if (bufs == null) return 0L;
         synchronized (bufs) {
             return remaining(bufs);
         }
     }
 
-    public static int remaining(List<ByteBuffer> bufs, int max) {
+    public static long remaining(List<ByteBuffer> bufs, long max) {
+        if (bufs == null) return 0;
         long remain = 0;
         for (ByteBuffer buf : bufs) {
             remain += buf.remaining();
@@ -790,7 +813,13 @@ public final class Utils {
         return (int) remain;
     }
 
-    public static int remaining(ByteBuffer[] refs, int max) {
+    public static int remaining(List<ByteBuffer> bufs, int max) {
+        // safe cast since max is an int
+        return (int) remaining(bufs, (long) max);
+    }
+
+    public static long remaining(ByteBuffer[] refs, long max) {
+        if (refs == null) return 0;
         long remain = 0;
         for (ByteBuffer b : refs) {
             remain += b.remaining();
@@ -799,6 +828,11 @@ public final class Utils {
             }
         }
         return (int) remain;
+    }
+
+    public static int remaining(ByteBuffer[] refs, int max) {
+        // safe cast since max is an int
+        return (int) remaining(refs, (long) max);
     }
 
     public static void close(Closeable... closeables) {

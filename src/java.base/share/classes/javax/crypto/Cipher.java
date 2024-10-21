@@ -540,11 +540,9 @@ public class Cipher {
         for (Transform transform : transforms) {
             cipherServices.add(new ServiceId("Cipher", transform.transform));
         }
-        List<Service> services =
-                GetInstance.getCipherServices(cipherServices);
         // make sure there is at least one service from a signed provider
         // and that it can use the specified mode and padding
-        Iterator<Service> t = services.iterator();
+        Iterator<Service> t = GetInstance.getCipherServices(cipherServices);
         Exception failure = null;
         while (t.hasNext()) {
             Service s = t.next();

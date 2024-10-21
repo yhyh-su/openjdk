@@ -340,7 +340,7 @@ public abstract class Type extends AnnoConstruct implements TypeMirror, PoolCons
      * it should not be used outside this class.
      */
     protected Type typeNoMetadata() {
-        return metadata.isEmpty() ? this : baseType();
+        return metadata.isEmpty() ? this : stripMetadata();
     }
 
     /**
@@ -426,25 +426,42 @@ public abstract class Type extends AnnoConstruct implements TypeMirror, PoolCons
         return accept(stripMetadata, null);
     }
     //where
+        /**
+         * Note: this visitor only needs to handle cases where
+         * 'contained' types can be annotated. These cases are
+         * described in JVMS 4.7.20.2 and are : classes (for type
+         * parameters and enclosing types), wildcards, and arrays.
+         */
         private static final TypeMapping<Void> stripMetadata = new StructuralTypeMapping<Void>() {
             @Override
             public Type visitClassType(ClassType t, Void aVoid) {
-                return super.visitClassType((ClassType)t.typeNoMetadata(), aVoid);
+                return super.visitClassType((ClassType) dropMetadata(t), aVoid);
             }
 
             @Override
             public Type visitArrayType(ArrayType t, Void aVoid) {
-                return super.visitArrayType((ArrayType)t.typeNoMetadata(), aVoid);
-            }
-
-            @Override
-            public Type visitTypeVar(TypeVar t, Void aVoid) {
-                return super.visitTypeVar((TypeVar)t.typeNoMetadata(), aVoid);
+                return super.visitArrayType((ArrayType) dropMetadata(t), aVoid);
             }
 
             @Override
             public Type visitWildcardType(WildcardType wt, Void aVoid) {
-                return super.visitWildcardType((WildcardType)wt.typeNoMetadata(), aVoid);
+                return super.visitWildcardType((WildcardType) dropMetadata(wt), aVoid);
+            }
+
+            @Override
+            public Type visitType(Type t, Void aVoid) {
+                return dropMetadata(t);
+            }
+
+            private static Type dropMetadata(Type t) {
+                if (t.getMetadata().isEmpty()) {
+                    return t;
+                }
+                Type baseType = t.baseType();
+                if (baseType.getMetadata().isEmpty()) {
+                    return baseType;
+                }
+                return baseType.cloneWithMetadata(List.nil());
             }
         };
 
@@ -583,7 +600,7 @@ public abstract class Type extends AnnoConstruct implements TypeMirror, PoolCons
     public Type              getUpperBound()     { return null; }
     public Type              getLowerBound()     { return null; }
 
-    /** Navigation methods, these will work for classes, type variables,
+    /* Navigation methods, these will work for classes, type variables,
      *  foralls, but will return null for arrays and methods.
      */
 
@@ -1103,6 +1120,7 @@ public abstract class Type extends AnnoConstruct implements TypeMirror, PoolCons
                         s += String.valueOf(sym.hashCode());
                     return s;
                 } else if (longform) {
+                    sym.apiComplete();
                     return sym.getQualifiedName().toString();
                 } else {
                     return sym.name.toString();
@@ -2320,7 +2338,7 @@ public abstract class Type extends AnnoConstruct implements TypeMirror, PoolCons
             this.originalType = (originalType == null ? noType : originalType);
         }
 
-        private ErrorType(Type originalType, TypeSymbol tsym,
+        public ErrorType(Type originalType, TypeSymbol tsym,
                           List<TypeMetadata> metadata) {
             super(noType, List.nil(), null, metadata);
             this.tsym = tsym;
@@ -2374,10 +2392,6 @@ public abstract class Type extends AnnoConstruct implements TypeMirror, PoolCons
         public boolean isErroneous()             { return true; }
         public boolean isCompound()              { return false; }
         public boolean isInterface()             { return false; }
-
-        public List<Type> allparams()            { return List.nil(); }
-        @DefinedBy(Api.LANGUAGE_MODEL)
-        public List<Type> getTypeArguments()     { return List.nil(); }
 
         @DefinedBy(Api.LANGUAGE_MODEL)
         public TypeKind getKind() {

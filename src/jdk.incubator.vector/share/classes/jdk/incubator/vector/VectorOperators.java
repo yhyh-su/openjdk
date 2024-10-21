@@ -563,6 +563,7 @@ public abstract class VectorOperators {
     public static final /*bitwise*/ Associative OR = assoc("OR", "|", VectorSupport.VECTOR_OP_OR, VO_NOFP+VO_ASSOC);
     /*package-private*/ /** Version of OR which works on float and double too. */
     static final Associative OR_UNCHECKED = assoc("OR_UNCHECKED", "|", VectorSupport.VECTOR_OP_OR, VO_ASSOC+VO_PRIVATE);
+
     /** Produce {@code a^b}.  Integral only. */
     public static final /*bitwise*/ Associative XOR = assoc("XOR", "^", VectorSupport.VECTOR_OP_XOR, VO_NOFP+VO_ASSOC);
 
@@ -801,7 +802,7 @@ public abstract class VectorOperators {
                                     kind, dom, ran);
     }
 
-    private static abstract class OperatorImpl implements Operator {
+    private abstract static class OperatorImpl implements Operator {
         private final String symName;
         private final String opName;
         private final int opInfo;
@@ -1111,7 +1112,7 @@ public abstract class VectorOperators {
         private static final @Stable ConversionImpl<?,?>[][][]
             CACHES = new ConversionImpl<?,?>[KIND_LIMIT][LINE_LIMIT][LINE_LIMIT];
 
-        private synchronized static void initCaches() {
+        private static synchronized void initCaches() {
             for (var f : VectorOperators.class.getFields()) {
                 if (f.getType() != Conversion.class)  continue;
                 ConversionImpl<?,?> conv;

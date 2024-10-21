@@ -45,6 +45,7 @@ import java.io.RandomAccessFile;
 import java.security.ProtectionDomain;
 import java.security.Provider;
 import java.security.Signature;
+import javax.security.auth.x500.X500Principal;
 
 /** A repository of "shared secrets", which are a mechanism for
     calling implementation-private methods in another package without
@@ -53,7 +54,13 @@ import java.security.Signature;
     within that package; the object implementing that interface is
     provided through a third package to which access is restricted.
     This framework avoids the primary disadvantage of using reflection
-    for this purpose, namely the loss of compile-time checking. */
+    for this purpose, namely the loss of compile-time checking.
+ * <p><strong>
+ * Usage of these APIs often means bad encapsulation designs,
+ * increased complexity and lack of sustainability.
+ * Use this only as a last resort!
+ * </strong>
+ */
 
 public class SharedSecrets {
     private static JavaAWTAccess javaAWTAccess;
@@ -91,7 +98,7 @@ public class SharedSecrets {
     private static JavaSecuritySpecAccess javaSecuritySpecAccess;
     private static JavaxCryptoSealedObjectAccess javaxCryptoSealedObjectAccess;
     private static JavaxCryptoSpecAccess javaxCryptoSpecAccess;
-    private static JavaTemplateAccess javaTemplateAccess;
+    private static JavaxSecurityAccess javaxSecurityAccess;
 
     public static void setJavaUtilCollectionAccess(JavaUtilCollectionAccess juca) {
         javaUtilCollectionAccess = juca;
@@ -533,17 +540,15 @@ public class SharedSecrets {
         return access;
     }
 
-    public static void setJavaTemplateAccess(JavaTemplateAccess jta) {
-        javaTemplateAccess = jta;
+    public static void setJavaxSecurityAccess(JavaxSecurityAccess jsa) {
+        javaxSecurityAccess = jsa;
     }
 
-    public static JavaTemplateAccess getJavaTemplateAccess() {
-        var access = javaTemplateAccess;
+    public static JavaxSecurityAccess getJavaxSecurityAccess() {
+        var access = javaxSecurityAccess;
         if (access == null) {
-            try {
-                Class.forName("java.lang.runtime.TemplateSupport", true, null);
-                access = javaTemplateAccess;
-            } catch (ClassNotFoundException e) {}
+            ensureClassInitialized(X500Principal.class);
+            access = javaxSecurityAccess;
         }
         return access;
     }

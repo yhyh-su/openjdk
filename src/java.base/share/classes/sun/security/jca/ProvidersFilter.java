@@ -743,7 +743,7 @@ public final class ProvidersFilter {
 
     /*
      * CipherTransformation is used from the Cipher::tryGetService,
-     * Cipher::newInstance and ProviderList.CipherServiceList::tryGetService
+     * Cipher::newInstance and ProviderList.CipherServiceIterator::tryGetService
      * methods for a thread to indicate that a service will be looked up for a
      * Cipher transformation. In these cases, the service evaluation against
      * the Providers Filter is based on the transformation and not the service

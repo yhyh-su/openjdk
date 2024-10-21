@@ -25,7 +25,6 @@
 
 package java.security;
 
-import jdk.internal.util.random.RandomSupport.RandomGeneratorProperties;
 import sun.security.jca.GetInstance;
 import sun.security.jca.GetInstance.Instance;
 import sun.security.jca.Providers;
@@ -150,10 +149,6 @@ import java.util.regex.Pattern;
  * @since 1.1
  */
 
-@RandomGeneratorProperties(
-        name = "SecureRandom",
-        isStochastic = true
-)
 public class SecureRandom extends java.util.Random {
 
     private static final Debug pdebug =
@@ -231,8 +226,8 @@ public class SecureRandom extends java.util.Random {
         if (provider == null || algorithm == null) {
             return false;
         } else {
-            return Boolean.parseBoolean(provider.getProperty(
-                    "SecureRandom." + algorithm + " ThreadSafe", "false"));
+            Service service = provider.getService("SecureRandom", algorithm);
+            return Boolean.parseBoolean(service.getAttribute("ThreadSafe"));
         }
     }
 
