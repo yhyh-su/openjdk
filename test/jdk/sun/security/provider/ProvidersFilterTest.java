@@ -427,9 +427,8 @@ public final class ProvidersFilterTest {
                 p.debug(testClassName);
 
                 // Need the launched process to connect to a debugger?
-                //System.setProperty("test.vm.opts", "-Xdebug -Xrunjdwp:" +
-                //        "transport=dt_socket,address=localhost:8000," +
-                //        "suspend=y");
+                //System.setProperty("test.vm.opts", "-Xrunjdwp:transport=" +
+                //        "dt_socket,address=localhost:8000,suspend=y");
             } else {
                 p.nodump();
             }
