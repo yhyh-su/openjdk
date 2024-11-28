@@ -237,8 +237,8 @@ import java.util.stream.StreamSupport;
  *
  * @param <E> the type of elements in this collection
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
+ * @author Josh Bloch
+ * @author Neal Gafter
  * @see     Set
  * @see     List
  * @see     Map
@@ -302,28 +302,17 @@ public interface Collection<E> extends Iterable<E> {
      */
     Iterator<E> iterator();
 
-    /**
-     * Returns an array containing all of the elements in this collection.
-     * If this collection makes any guarantees as to what order its elements
-     * are returned by its iterator, this method must return the elements in
-     * the same order. The returned array's {@linkplain Class#getComponentType
-     * runtime component type} is {@code Object}.
-     *
-     * <p>The returned array will be "safe" in that no references to it are
-     * maintained by this collection.  (In other words, this method must
-     * allocate a new array even if this collection is backed by an array).
-     * The caller is thus free to modify the returned array.
-     *
-     * @apiNote
-     * This method acts as a bridge between array-based and collection-based APIs.
-     * It returns an array whose runtime type is {@code Object[]}.
-     * Use {@link #toArray(Object[]) toArray(T[])} to reuse an existing
-     * array, or use {@link #toArray(IntFunction)} to control the runtime type
-     * of the array.
-     *
-     * @return an array, whose {@linkplain Class#getComponentType runtime component
-     * type} is {@code Object}, containing all of the elements in this collection
-     */
+    /**  返回一个包含此集合中所有元素的数组。
+     * 如果该集合对其元素通过迭代器返回的顺序有任何保证， 则此方法必须以相同的顺序返回元素。
+     * 返回的数组的 {@linkplain Class#getComponentType 运行时组件类型} 为 {@code Object}。 * *
+     * <p>返回的数组是“安全的”，即集合不再持有对它的任何引用。
+     * * （换句话说，即使该集合是由一个数组支持的，此方法也必须分配一个新的数组）。
+     * * 因此，调用者可以自由修改返回的数组。 * * @apiNote * 此方法充当基于数组和基于集合的API之间的桥梁。
+     * * 它返回的数组的运行时类型是 {@code Object[]}。
+     * * 使用 {@link #toArray(Object[]) toArray(T[])} 可以重用现有的数组，
+     * * 或使用 {@link #toArray(IntFunction)} 来控制数组的运行时类型。
+     * * * @return 一个数组，其 {@linkplain Class#getComponentType 运行时组件类型}
+     * * 为 {@code Object}，包含此集合中的所有元素 */
     Object[] toArray();
 
     /**

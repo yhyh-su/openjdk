@@ -311,7 +311,7 @@ public interface BlockingQueue<E> extends Queue<E> {
     /**
      * Returns {@code true} if this queue contains the specified element.
      * More formally, returns {@code true} if and only if this queue contains
-     * at least one element {@code e} such that {@code o.equals(e)}.
+     * at least(至少) one element {@code e} such that(使得) {@code o.equals(e)}.
      *
      * @param o object to be checked for containment in this queue
      * @return {@code true} if this queue contains the specified element

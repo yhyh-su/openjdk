@@ -67,8 +67,8 @@ import java.util.function.Consumer;
  *
  * @param <E> the type of elements in this list
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
+ * @author Josh Bloch
+ * @author Neal Gafter
  * @since 1.2
  */
 
@@ -185,9 +185,9 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      */
     public int indexOf(Object o) {
         ListIterator<E> it = listIterator();
-        if (o==null) {
+        if (o == null) {
             while (it.hasNext())
-                if (it.next()==null)
+                if (it.next() == null)
                     return it.previousIndex();
         } else {
             while (it.hasNext())
@@ -211,9 +211,9 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      */
     public int lastIndexOf(Object o) {
         ListIterator<E> it = listIterator(size());
-        if (o==null) {
+        if (o == null) {
             while (it.hasPrevious())
-                if (it.previous()==null)
+                if (it.previous() == null)
                     return it.nextIndex();
         } else {
             while (it.hasPrevious())
@@ -429,7 +429,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         }
 
         public int previousIndex() {
-            return cursor-1;
+            return cursor - 1;
         }
 
         public void set(E e) {
@@ -509,7 +509,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
             throw new IndexOutOfBoundsException("toIndex = " + toIndex);
         if (fromIndex > toIndex)
             throw new IllegalArgumentException("fromIndex(" + fromIndex +
-                                               ") > toIndex(" + toIndex + ")");
+                    ") > toIndex(" + toIndex + ")");
     }
 
     // Comparison and hashing
@@ -547,7 +547,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         while (e1.hasNext() && e2.hasNext()) {
             E o1 = e1.next();
             Object o2 = e2.next();
-            if (!(o1==null ? o2==null : o1.equals(o2)))
+            if (!(o1 == null ? o2 == null : o1.equals(o2)))
                 return false;
         }
         return !(e1.hasNext() || e2.hasNext());
@@ -566,7 +566,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     public int hashCode() {
         int hashCode = 1;
         for (E e : this)
-            hashCode = 31*hashCode + (e==null ? 0 : e.hashCode());
+            hashCode = 31 * hashCode + (e == null ? 0 : e.hashCode());
         return hashCode;
     }
 
@@ -595,38 +595,21 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      */
     protected void removeRange(int fromIndex, int toIndex) {
         ListIterator<E> it = listIterator(fromIndex);
-        for (int i=0, n=toIndex-fromIndex; i<n; i++) {
+        for (int i = 0, n = toIndex - fromIndex; i < n; i++) {
             it.next();
             it.remove();
         }
     }
 
     /**
-     * The number of times this list has been <i>structurally modified</i>.
-     * Structural modifications are those that change the size of the
-     * list, or otherwise perturb it in such a fashion that iterations in
-     * progress may yield incorrect results.
-     *
-     * <p>This field is used by the iterator and list iterator implementation
-     * returned by the {@code iterator} and {@code listIterator} methods.
-     * If the value of this field changes unexpectedly, the iterator (or list
-     * iterator) will throw a {@code ConcurrentModificationException} in
-     * response to the {@code next}, {@code remove}, {@code previous},
-     * {@code set} or {@code add} operations.  This provides
-     * <i>fail-fast</i> behavior, rather than non-deterministic behavior in
-     * the face of concurrent modification during iteration.
-     *
-     * <p><b>Use of this field by subclasses is optional.</b> If a subclass
-     * wishes to provide fail-fast iterators (and list iterators), then it
-     * merely has to increment this field in its {@code add(int, E)} and
-     * {@code remove(int)} methods (and any other methods that it overrides
-     * that result in structural modifications to the list).  A single call to
-     * {@code add(int, E)} or {@code remove(int)} must add no more than
-     * one to this field, or the iterators (and list iterators) will throw
-     * bogus {@code ConcurrentModificationExceptions}.  If an implementation
-     * does not wish to provide fail-fast iterators, this field may be
-     * ignored.
-     */
+     此列表的结构性修改次数。
+     结构性修改指的是那些改变列表大小的操作，或者以其他方式扰动列表，使得正在进行的迭代可能会得出不正确的结果。
+     <p>该字段由 {@code iterator} 和 {@code listIterator} 方法返回的迭代器和列表迭代器实现使用。
+     如果该字段的值发生意外变化，迭代器（或列表迭代器）将在执行 {@code next}、{@code remove}、{@code previous}、{@code set} 或 {@code add} 操作时抛出 {@code ConcurrentModificationException}。
+     这提供了<i>快速失败</i>的行为，而不是在迭代过程中遇到并发修改时的非确定性行为。
+     <p><b>子类使用此字段是可选的。</b>如果子类希望提供快速失败的迭代器（和列表迭代器），那么它只需在 {@code add(int, E)} 和 {@code remove(int)} 方法中（以及任何其他会导致结构性修改的重写方法中）增加此字段的值。
+     每次调用 {@code add(int, E)} 或 {@code remove(int)} 时，该字段最多增加 1，否则迭代器（和列表迭代器）将抛出伪造的 {@code ConcurrentModificationExceptions}。
+     如果实现不希望提供快速失败的迭代器，则可以忽略此字段。 */
     protected transient int modCount = 0;
 
     private void rangeCheckForAdd(int index) {
@@ -635,7 +618,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     }
 
     private String outOfBoundsMsg(int index) {
-        return "Index: "+index+", Size: "+size();
+        return "Index: " + index + ", Size: " + size();
     }
 
     /**
@@ -672,7 +655,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 
         /** Create new spliterator covering the given  range */
         private RandomAccessSpliterator(RandomAccessSpliterator<E> parent,
-                                int origin, int fence) {
+                                        int origin, int fence) {
             this.list = parent.list;
             this.index = origin;
             this.fence = fence;
@@ -821,7 +804,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         public boolean addAll(int index, Collection<? extends E> c) {
             rangeCheckForAdd(index);
             int cSize = c.size();
-            if (cSize==0)
+            if (cSize == 0)
                 return false;
             checkForComodification();
             root.addAll(offset + index, c);
@@ -898,7 +881,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         }
 
         private String outOfBoundsMsg(int index) {
-            return "Index: "+index+", Size: "+size;
+            return "Index: " + index + ", Size: " + size;
         }
 
         private void checkForComodification() {
@@ -924,7 +907,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
          * not a RandomAccessSubList itself.
          */
         RandomAccessSubList(AbstractList<E> root,
-                int fromIndex, int toIndex) {
+                            int fromIndex, int toIndex) {
             super(root, fromIndex, toIndex);
         }
 
@@ -932,7 +915,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
          * Constructs a sublist of another RandomAccessSubList.
          */
         RandomAccessSubList(RandomAccessSubList<E> parent,
-                int fromIndex, int toIndex) {
+                            int fromIndex, int toIndex) {
             super(parent, fromIndex, toIndex);
         }
 
