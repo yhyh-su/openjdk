@@ -28,17 +28,16 @@ package java.lang;
 import jdk.internal.vm.annotation.IntrinsicCandidate;
 
 /**
- * Class {@code Object} is the root of the class hierarchy.
- * Every class has {@code Object} as a superclass. All objects,
- * including arrays, implement the methods of this class.
- *
+ * 类 Object 是类层次结构的根.
+ * 每个类都有 Object 作为超类。所有对象
+ * 包括数组在内，实现该类的方法。
  * @see     java.lang.Class
  * @since   1.0
  */
 public class Object {
 
     /**
-     * Constructs a new object.
+     * 构造一个新对象
      */
     @IntrinsicCandidate
     public Object() {}
