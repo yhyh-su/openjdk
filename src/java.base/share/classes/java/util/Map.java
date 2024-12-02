@@ -151,7 +151,7 @@ import java.io.Serializable;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author  Josh Bloch
+ * @author Josh Bloch
  * @see HashMap
  * @see TreeMap
  * @see Hashtable
@@ -304,7 +304,7 @@ public interface Map<K, V> {
     /**
      * Copies all of the mappings from the specified map to this map
      * (optional operation).  The effect of this call is equivalent to that
-     * of calling {@link #put(Object,Object) put(k, v)} on this map once
+     * of calling {@link #put(Object, Object) put(k, v)} on this map once
      * for each mapping from key {@code k} to value {@code v} in the
      * specified map.  The behavior of this operation is undefined if the specified map
      * is modified while the operation is in progress. If the specified map has a defined
@@ -543,7 +543,7 @@ public interface Map<K, V> {
          */
         public static <K extends Comparable<? super K>, V> Comparator<Map.Entry<K, V>> comparingByKey() {
             return (Comparator<Map.Entry<K, V>> & Serializable)
-                (c1, c2) -> c1.getKey().compareTo(c2.getKey());
+                    (c1, c2) -> c1.getKey().compareTo(c2.getKey());
         }
 
         /**
@@ -560,7 +560,7 @@ public interface Map<K, V> {
          */
         public static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K, V>> comparingByValue() {
             return (Comparator<Map.Entry<K, V>> & Serializable)
-                (c1, c2) -> c1.getValue().compareTo(c2.getValue());
+                    (c1, c2) -> c1.getValue().compareTo(c2.getValue());
         }
 
         /**
@@ -579,7 +579,7 @@ public interface Map<K, V> {
         public static <K, V> Comparator<Map.Entry<K, V>> comparingByKey(Comparator<? super K> cmp) {
             Objects.requireNonNull(cmp);
             return (Comparator<Map.Entry<K, V>> & Serializable)
-                (c1, c2) -> cmp.compare(c1.getKey(), c2.getKey());
+                    (c1, c2) -> cmp.compare(c1.getKey(), c2.getKey());
         }
 
         /**
@@ -598,7 +598,7 @@ public interface Map<K, V> {
         public static <K, V> Comparator<Map.Entry<K, V>> comparingByValue(Comparator<? super V> cmp) {
             Objects.requireNonNull(cmp);
             return (Comparator<Map.Entry<K, V>> & Serializable)
-                (c1, c2) -> cmp.compare(c1.getValue(), c2.getValue());
+                    (c1, c2) -> cmp.compare(c1.getValue(), c2.getValue());
         }
 
         /**
@@ -689,8 +689,8 @@ public interface Map<K, V> {
     default V getOrDefault(Object key, V defaultValue) {
         V v;
         return (((v = get(key)) != null) || containsKey(key))
-            ? v
-            : defaultValue;
+                ? v
+                : defaultValue;
     }
 
     /**
@@ -881,7 +881,7 @@ public interface Map<K, V> {
     default boolean remove(Object key, Object value) {
         Object curValue = get(key);
         if (!Objects.equals(curValue, value) ||
-            (curValue == null && !containsKey(key))) {
+                (curValue == null && !containsKey(key))) {
             return false;
         }
         remove(key);
@@ -932,7 +932,7 @@ public interface Map<K, V> {
     default boolean replace(K key, V oldValue, V newValue) {
         Object curValue = get(key);
         if (!Objects.equals(curValue, oldValue) ||
-            (curValue == null && !containsKey(key))) {
+                (curValue == null && !containsKey(key))) {
             return false;
         }
         put(key, newValue);
@@ -1059,7 +1059,7 @@ public interface Map<K, V> {
      * @since 1.8
      */
     default V computeIfAbsent(K key,
-            Function<? super K, ? extends V> mappingFunction) {
+                              Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
         V v;
         if ((v = get(key)) == null) {
@@ -1136,7 +1136,7 @@ public interface Map<K, V> {
      * @since 1.8
      */
     default V computeIfPresent(K key,
-            BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+                               BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         V oldValue;
         if ((oldValue = get(key)) != null) {
@@ -1221,7 +1221,7 @@ public interface Map<K, V> {
      * @since 1.8
      */
     default V compute(K key,
-            BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+                      BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         V oldValue = get(key);
 
@@ -1318,12 +1318,12 @@ public interface Map<K, V> {
      * @since 1.8
      */
     default V merge(K key, V value,
-            BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+                    BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         Objects.requireNonNull(value);
         V oldValue = get(key);
         V newValue = (oldValue == null) ? value :
-                   remappingFunction.apply(oldValue, value);
+                remappingFunction.apply(oldValue, value);
         if (newValue == null) {
             remove(key);
         } else {
@@ -1344,7 +1344,7 @@ public interface Map<K, V> {
      */
     @SuppressWarnings("unchecked")
     static <K, V> Map<K, V> of() {
-        return (Map<K,V>) ImmutableCollections.EMPTY_MAP;
+        return (Map<K, V>) ImmutableCollections.EMPTY_MAP;
     }
 
     /**
@@ -1483,7 +1483,7 @@ public interface Map<K, V> {
     static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5,
                                K k6, V v6) {
         return new ImmutableCollections.MapN<>(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5,
-                                               k6, v6);
+                k6, v6);
     }
 
     /**
@@ -1515,7 +1515,7 @@ public interface Map<K, V> {
     static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5,
                                K k6, V v6, K k7, V v7) {
         return new ImmutableCollections.MapN<>(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5,
-                                               k6, v6, k7, v7);
+                k6, v6, k7, v7);
     }
 
     /**
@@ -1549,7 +1549,7 @@ public interface Map<K, V> {
     static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5,
                                K k6, V v6, K k7, V v7, K k8, V v8) {
         return new ImmutableCollections.MapN<>(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5,
-                                               k6, v6, k7, v7, k8, v8);
+                k6, v6, k7, v7, k8, v8);
     }
 
     /**
@@ -1585,7 +1585,7 @@ public interface Map<K, V> {
     static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5,
                                K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9) {
         return new ImmutableCollections.MapN<>(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5,
-                                               k6, v6, k7, v7, k8, v8, k9, v9);
+                k6, v6, k7, v7, k8, v8, k9, v9);
     }
 
     /**
@@ -1623,7 +1623,7 @@ public interface Map<K, V> {
     static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5,
                                K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9, K k10, V v10) {
         return new ImmutableCollections.MapN<>(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5,
-                                               k6, v6, k7, v7, k8, v8, k9, v9, k10, v10);
+                k6, v6, k7, v7, k8, v8, k9, v9, k10, v10);
     }
 
     /**
@@ -1662,7 +1662,7 @@ public interface Map<K, V> {
     static <K, V> Map<K, V> ofEntries(Entry<? extends K, ? extends V>... entries) {
         if (entries.length == 0) { // implicit null check of entries array
             @SuppressWarnings("unchecked")
-            var map = (Map<K,V>) ImmutableCollections.EMPTY_MAP;
+            var map = (Map<K, V>) ImmutableCollections.EMPTY_MAP;
             return map;
         } else if (entries.length == 1) {
             // implicit null check of the array slot
@@ -1737,14 +1737,14 @@ public interface Map<K, V> {
      * @throws NullPointerException if map is null, or if it contains any null keys or values
      * @since 10
      */
-    @SuppressWarnings({"rawtypes","unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     static <K, V> Map<K, V> copyOf(Map<? extends K, ? extends V> map) {
         if (map instanceof ImmutableCollections.AbstractImmutableMap) {
-            return (Map<K,V>)map;
+            return (Map<K, V>) map;
         } else if (map.isEmpty()) { // Implicit nullcheck of map
             return Map.of();
         } else {
-            return (Map<K,V>)Map.ofEntries(map.entrySet().toArray(new Entry[0]));
+            return (Map<K, V>) Map.ofEntries(map.entrySet().toArray(new Entry[0]));
         }
     }
 }
