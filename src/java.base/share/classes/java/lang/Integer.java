@@ -68,10 +68,10 @@ import static java.lang.String.UTF16;
  * Delight</cite>, (Addison Wesley, 2002) and <cite>Hacker's
  * Delight, Second Edition</cite>, (Pearson Education, 2013).
  *
- * @author  Lee Boynton
- * @author  Arthur van Hoff
- * @author  Josh Bloch
- * @author  Joseph D. Darcy
+ * @author Lee Boynton
+ * @author Arthur van Hoff
+ * @author Josh Bloch
+ * @author Joseph D. Darcy
  * @since 1.0
  */
 @jdk.internal.ValueBased
@@ -81,19 +81,21 @@ public final class Integer extends Number
      * A constant holding the minimum value an {@code int} can
      * have, -2<sup>31</sup>.
      */
-    @Native public static final int   MIN_VALUE = 0x80000000;
+    @Native
+    public static final int MIN_VALUE = 0x80000000;
 
     /**
      * A constant holding the maximum value an {@code int} can
      * have, 2<sup>31</sup>-1.
      */
-    @Native public static final int   MAX_VALUE = 0x7fffffff;
+    @Native
+    public static final int MAX_VALUE = 0x7fffffff;
 
     /**
      * The {@code Class} instance representing the primitive type
      * {@code int}.
      *
-     * @since   1.1
+     * @since 1.1
      */
     public static final Class<Integer> TYPE = Class.getPrimitiveClass("int");
 
@@ -101,12 +103,12 @@ public final class Integer extends Number
      * All possible chars for representing a number as a String
      */
     static final char[] digits = {
-        '0' , '1' , '2' , '3' , '4' , '5' ,
-        '6' , '7' , '8' , '9' , 'a' , 'b' ,
-        'c' , 'd' , 'e' , 'f' , 'g' , 'h' ,
-        'i' , 'j' , 'k' , 'l' , 'm' , 'n' ,
-        'o' , 'p' , 'q' , 'r' , 's' , 't' ,
-        'u' , 'v' , 'w' , 'x' , 'y' , 'z'
+            '0', '1', '2', '3', '4', '5',
+            '6', '7', '8', '9', 'a', 'b',
+            'c', 'd', 'e', 'f', 'g', 'h',
+            'i', 'j', 'k', 'l', 'm', 'n',
+            'o', 'p', 'q', 'r', 's', 't',
+            'u', 'v', 'w', 'x', 'y', 'z'
     };
 
     /**
@@ -149,7 +151,7 @@ public final class Integer extends Number
      *
      * @param   i       an integer to be converted to a string.
      * @param   radix   the radix to use in the string representation.
-     * @return  a string representation of the argument in the specified radix.
+     * @return a string representation of the argument in the specified radix.
      * @see     java.lang.Character#MAX_RADIX
      * @see     java.lang.Character#MIN_RADIX
      */
@@ -172,10 +174,10 @@ public final class Integer extends Number
             }
 
             while (i <= -radix) {
-                buf[charPos--] = (byte)digits[-(i % radix)];
+                buf[charPos--] = (byte) digits[-(i % radix)];
                 i = i / radix;
             }
-            buf[charPos] = (byte)digits[-i];
+            buf[charPos] = (byte) digits[-i];
 
             if (negative) {
                 buf[--charPos] = '-';
@@ -227,7 +229,7 @@ public final class Integer extends Number
      *
      * @param   i       an integer to be converted to an unsigned string.
      * @param   radix   the radix to use in the string representation.
-     * @return  an unsigned string representation of the argument in the specified radix.
+     * @return an unsigned string representation of the argument in the specified radix.
      * @see     #toString(int, int)
      * @since 1.8
      */
@@ -278,12 +280,12 @@ public final class Integer extends Number
      * a delimiter, prefix, and suffix.
      *
      * @param   i   an integer to be converted to a string.
-     * @return  the string representation of the unsigned integer value
+     * @return the string representation of the unsigned integer value
      *          represented by the argument in hexadecimal (base&nbsp;16).
      * @see java.util.HexFormat
      * @see #parseUnsignedInt(String, int)
      * @see #toUnsignedString(int, int)
-     * @since   1.0.2
+     * @since 1.0.2
      */
     public static String toHexString(int i) {
         return toUnsignedString0(i, 4);
@@ -317,11 +319,11 @@ public final class Integer extends Number
      * {@code '\u005Cu0037'}.
      *
      * @param   i   an integer to be converted to a string.
-     * @return  the string representation of the unsigned integer value
+     * @return the string representation of the unsigned integer value
      *          represented by the argument in octal (base&nbsp;8).
      * @see #parseUnsignedInt(String, int)
      * @see #toUnsignedString(int, int)
-     * @since   1.0.2
+     * @since 1.0.2
      */
     public static String toOctalString(int i) {
         return toUnsignedString0(i, 3);
@@ -349,11 +351,11 @@ public final class Integer extends Number
      * '1'} ({@code '\u005Cu0031'}) are used as binary digits.
      *
      * @param   i   an integer to be converted to a string.
-     * @return  the string representation of the unsigned integer value
+     * @return the string representation of the unsigned integer value
      *          represented by the argument in binary (base&nbsp;2).
      * @see #parseUnsignedInt(String, int)
      * @see #toUnsignedString(int, int)
-     * @since   1.0.2
+     * @since 1.0.2
      */
     public static String toBinaryString(int i) {
         return toUnsignedString0(i, 1);
@@ -392,7 +394,7 @@ public final class Integer extends Number
         int radix = 1 << shift;
         int mask = radix - 1;
         do {
-            buf[--charPos] = (byte)Integer.digits[val & mask];
+            buf[--charPos] = (byte) Integer.digits[val & mask];
             val >>>= shift;
         } while (charPos > 0);
     }
@@ -425,7 +427,7 @@ public final class Integer extends Number
      * #toString(int, int)} method.
      *
      * @param   i   an integer to be converted.
-     * @return  a string representation of the argument in base&nbsp;10.
+     * @return a string representation of the argument in base&nbsp;10.
      */
     @IntrinsicCandidate
     public static String toString(int i) {
@@ -451,7 +453,7 @@ public final class Integer extends Number
      * int)} method.
      *
      * @param   i  an integer to be converted to an unsigned string.
-     * @return  an unsigned string representation of the argument.
+     * @return an unsigned string representation of the argument.
      * @see     #toUnsignedString(int, int)
      * @since 1.8
      */
@@ -509,13 +511,13 @@ public final class Integer extends Number
      * @param      s   the {@code String} containing the integer
      *                  representation to be parsed
      * @param      radix   the radix to be used while parsing {@code s}.
-     * @return     the integer represented by the string argument in the
+     * @return the integer represented by the string argument in the
      *             specified radix.
-     * @throws     NumberFormatException if the {@code String}
+     * @throws NumberFormatException if the {@code String}
      *             does not contain a parsable {@code int}.
      */
     public static int parseInt(String s, int radix)
-                throws NumberFormatException {
+            throws NumberFormatException {
         /*
          * WARNING: This method may be invoked early during VM initialization
          * before IntegerCache is initialized. Care must be taken to not use
@@ -528,12 +530,12 @@ public final class Integer extends Number
 
         if (radix < Character.MIN_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s less than Character.MIN_RADIX", radix));
+                    "radix %s less than Character.MIN_RADIX", radix));
         }
 
         if (radix > Character.MAX_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s greater than Character.MAX_RADIX", radix));
+                    "radix %s greater than Character.MAX_RADIX", radix));
         }
 
         int len = s.length();
@@ -554,7 +556,7 @@ public final class Integer extends Number
             /* Accumulating negatively avoids surprises near MAX_VALUE */
             while (i < len && (digit = digit(s.charAt(i++), radix)) >= 0
                     && (inRange = result > multmin
-                        || result == multmin && digit <= radix * multmin - limit)) {
+                    || result == multmin && digit <= radix * multmin - limit)) {
                 result = radix * result - digit;
             }
             if (inRange && i == len && digit >= 0) {
@@ -577,33 +579,33 @@ public final class Integer extends Number
      * @param      beginIndex   the beginning index, inclusive.
      * @param      endIndex     the ending index, exclusive.
      * @param      radix   the radix to be used while parsing {@code s}.
-     * @return     the signed {@code int} represented by the subsequence in
+     * @return the signed {@code int} represented by the subsequence in
      *             the specified radix.
-     * @throws     NullPointerException  if {@code s} is null.
-     * @throws     IndexOutOfBoundsException  if {@code beginIndex} is
+     * @throws NullPointerException  if {@code s} is null.
+     * @throws IndexOutOfBoundsException  if {@code beginIndex} is
      *             negative, or if {@code beginIndex} is greater than
      *             {@code endIndex} or if {@code endIndex} is greater than
      *             {@code s.length()}.
-     * @throws     NumberFormatException  if the {@code CharSequence} does not
+     * @throws NumberFormatException  if the {@code CharSequence} does not
      *             contain a parsable {@code int} in the specified
      *             {@code radix}, or if {@code radix} is either smaller than
      *             {@link java.lang.Character#MIN_RADIX} or larger than
      *             {@link java.lang.Character#MAX_RADIX}.
-     * @since  9
+     * @since 9
      */
     public static int parseInt(CharSequence s, int beginIndex, int endIndex, int radix)
-                throws NumberFormatException {
+            throws NumberFormatException {
         Objects.requireNonNull(s);
         Objects.checkFromToIndex(beginIndex, endIndex, s.length());
 
         if (radix < Character.MIN_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s less than Character.MIN_RADIX", radix));
+                    "radix %s less than Character.MIN_RADIX", radix));
         }
 
         if (radix > Character.MAX_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s greater than Character.MAX_RADIX", radix));
+                    "radix %s greater than Character.MAX_RADIX", radix));
         }
 
         /*
@@ -629,7 +631,7 @@ public final class Integer extends Number
             /* Accumulating negatively avoids surprises near MAX_VALUE */
             while (i < endIndex && (digit = digit(s.charAt(i++), radix)) >= 0
                     && (inRange = result > multmin
-                        || result == multmin && digit <= radix * multmin - limit)) {
+                    || result == multmin && digit <= radix * multmin - limit)) {
                 result = radix * result - digit;
             }
             if (inRange && i == endIndex && digit >= 0) {
@@ -637,7 +639,7 @@ public final class Integer extends Number
             }
         }
         throw NumberFormatException.forCharSequence(s, beginIndex,
-            endIndex, i - (digit < -1 ? 0 : 1));
+                endIndex, i - (digit < -1 ? 0 : 1));
     }
 
     /**
@@ -653,8 +655,8 @@ public final class Integer extends Number
      *
      * @param s    a {@code String} containing the {@code int}
      *             representation to be parsed
-     * @return     the integer value represented by the argument in decimal.
-     * @throws     NumberFormatException  if the string does not contain a
+     * @return the integer value represented by the argument in decimal.
+     * @throws NumberFormatException  if the string does not contain a
      *               parsable integer.
      */
     public static int parseInt(String s) throws NumberFormatException {
@@ -698,26 +700,26 @@ public final class Integer extends Number
      * @param      s   the {@code String} containing the unsigned integer
      *                  representation to be parsed
      * @param      radix   the radix to be used while parsing {@code s}.
-     * @return     the integer represented by the string argument in the
+     * @return the integer represented by the string argument in the
      *             specified radix.
-     * @throws     NumberFormatException if the {@code String}
+     * @throws NumberFormatException if the {@code String}
      *             does not contain a parsable {@code int}.
      * @since 1.8
      */
     public static int parseUnsignedInt(String s, int radix)
-                throws NumberFormatException {
-        if (s == null)  {
+            throws NumberFormatException {
+        if (s == null) {
             throw new NumberFormatException("Cannot parse null string");
         }
 
         if (radix < Character.MIN_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s less than Character.MIN_RADIX", radix));
+                    "radix %s less than Character.MIN_RADIX", radix));
         }
 
         if (radix > Character.MAX_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s greater than Character.MAX_RADIX", radix));
+                    "radix %s greater than Character.MAX_RADIX", radix));
         }
 
         int len = s.length();
@@ -728,7 +730,7 @@ public final class Integer extends Number
         char firstChar = s.charAt(i++);
         if (firstChar == '-') {
             throw new NumberFormatException(String.format(
-                "Illegal leading minus sign on unsigned string %s.", s));
+                    "Illegal leading minus sign on unsigned string %s.", s));
         }
         int digit = ~0xFF;
         if (firstChar != '+') {
@@ -740,7 +742,7 @@ public final class Integer extends Number
             boolean inRange = true;
             while (i < len && (digit = digit(s.charAt(i++), radix)) >= 0
                     && (inRange = compareUnsigned(result, multmax) < 0
-                        || result == multmax && digit < -radix * multmax)) {
+                    || result == multmax && digit < -radix * multmax)) {
                 result = radix * result + digit;
             }
             if (inRange && i == len && digit >= 0) {
@@ -751,7 +753,7 @@ public final class Integer extends Number
             throw NumberFormatException.forInputString(s, radix);
         }
         throw new NumberFormatException(String.format(
-            "String value %s exceeds range of unsigned int.", s));
+                "String value %s exceeds range of unsigned int.", s));
     }
 
     /**
@@ -767,33 +769,33 @@ public final class Integer extends Number
      * @param      beginIndex   the beginning index, inclusive.
      * @param      endIndex     the ending index, exclusive.
      * @param      radix   the radix to be used while parsing {@code s}.
-     * @return     the unsigned {@code int} represented by the subsequence in
+     * @return the unsigned {@code int} represented by the subsequence in
      *             the specified radix.
-     * @throws     NullPointerException  if {@code s} is null.
-     * @throws     IndexOutOfBoundsException  if {@code beginIndex} is
+     * @throws NullPointerException  if {@code s} is null.
+     * @throws IndexOutOfBoundsException  if {@code beginIndex} is
      *             negative, or if {@code beginIndex} is greater than
      *             {@code endIndex} or if {@code endIndex} is greater than
      *             {@code s.length()}.
-     * @throws     NumberFormatException  if the {@code CharSequence} does not
+     * @throws NumberFormatException  if the {@code CharSequence} does not
      *             contain a parsable unsigned {@code int} in the specified
      *             {@code radix}, or if {@code radix} is either smaller than
      *             {@link java.lang.Character#MIN_RADIX} or larger than
      *             {@link java.lang.Character#MAX_RADIX}.
-     * @since  9
+     * @since 9
      */
     public static int parseUnsignedInt(CharSequence s, int beginIndex, int endIndex, int radix)
-                throws NumberFormatException {
+            throws NumberFormatException {
         Objects.requireNonNull(s);
         Objects.checkFromToIndex(beginIndex, endIndex, s.length());
 
         if (radix < Character.MIN_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s less than Character.MIN_RADIX", radix));
+                    "radix %s less than Character.MIN_RADIX", radix));
         }
 
         if (radix > Character.MAX_RADIX) {
             throw new NumberFormatException(String.format(
-                "radix %s greater than Character.MAX_RADIX", radix));
+                    "radix %s greater than Character.MAX_RADIX", radix));
         }
 
         /*
@@ -809,7 +811,7 @@ public final class Integer extends Number
         char firstChar = s.charAt(i++);
         if (firstChar == '-') {
             throw new NumberFormatException(
-                "Illegal leading minus sign on unsigned string " + s + ".");
+                    "Illegal leading minus sign on unsigned string " + s + ".");
         }
         int digit = ~0xFF;
         if (firstChar != '+') {
@@ -821,7 +823,7 @@ public final class Integer extends Number
             boolean inRange = true;
             while (i < endIndex && (digit = digit(s.charAt(i++), radix)) >= 0
                     && (inRange = compareUnsigned(result, multmax) < 0
-                        || result == multmax && digit < -radix * multmax)) {
+                    || result == multmax && digit < -radix * multmax)) {
                 result = radix * result + digit;
             }
             if (inRange && i == endIndex && digit >= 0) {
@@ -830,10 +832,10 @@ public final class Integer extends Number
         }
         if (digit < 0) {
             throw NumberFormatException.forCharSequence(s, beginIndex,
-                endIndex, i - (digit < -1 ? 0 : 1));
+                    endIndex, i - (digit < -1 ? 0 : 1));
         }
         throw new NumberFormatException(String.format(
-            "String value %s exceeds range of unsigned int.", s));
+                "String value %s exceeds range of unsigned int.", s));
     }
 
     /**
@@ -847,8 +849,8 @@ public final class Integer extends Number
      *
      * @param s   a {@code String} containing the unsigned {@code int}
      *            representation to be parsed
-     * @return    the unsigned integer value represented by the argument in decimal.
-     * @throws    NumberFormatException  if the string does not contain a
+     * @return the unsigned integer value represented by the argument in decimal.
+     * @throws NumberFormatException  if the string does not contain a
      *            parsable unsigned integer.
      * @since 1.8
      */
@@ -875,14 +877,14 @@ public final class Integer extends Number
      *
      * @param      s   the string to be parsed.
      * @param      radix the radix to be used in interpreting {@code s}
-     * @return     an {@code Integer} object holding the value
+     * @return an {@code Integer} object holding the value
      *             represented by the string argument in the specified
      *             radix.
-     * @throws    NumberFormatException if the {@code String}
+     * @throws NumberFormatException if the {@code String}
      *            does not contain a parsable {@code int}.
      */
     public static Integer valueOf(String s, int radix) throws NumberFormatException {
-        return Integer.valueOf(parseInt(s,radix));
+        return Integer.valueOf(parseInt(s, radix));
     }
 
     /**
@@ -902,9 +904,9 @@ public final class Integer extends Number
      * </blockquote>
      *
      * @param      s   the string to be parsed.
-     * @return     an {@code Integer} object holding the value
+     * @return an {@code Integer} object holding the value
      *             represented by the string argument.
-     * @throws     NumberFormatException  if the string cannot be parsed
+     * @throws NumberFormatException  if the string cannot be parsed
      *             as an integer.
      */
     public static Integer valueOf(String s) throws NumberFormatException {
@@ -912,76 +914,81 @@ public final class Integer extends Number
     }
 
     /**
-     * Cache to support the object identity semantics of autoboxing for values between
-     * -128 and 127 (inclusive) as required by JLS.
+     * 缓存以支持自动装箱值在 -128 到 127（包含）之间的对象身份语义，正如 JLS 所要求的。
      *
-     * The cache is initialized on first usage.  The size of the cache
-     * may be controlled by the {@code -XX:AutoBoxCacheMax=<size>} option.
-     * During VM initialization, java.lang.Integer.IntegerCache.high property
-     * may be set and saved in the private system properties in the
-     * jdk.internal.misc.VM class.
+     * 缓存在首次使用时初始化。缓存的大小可以通过 {@code -XX:AutoBoxCacheMax=<size>} 选项进行控制。
+     * 在虚拟机初始化期间，可以设置并保存 java.lang.Integer.IntegerCache.high 属性，
+     * 该属性保存在 jdk.internal.misc.VM 类的私有系统属性中。
      *
-     * WARNING: The cache is archived with CDS and reloaded from the shared
-     * archive at runtime. The archived cache (Integer[]) and Integer objects
-     * reside in the closed archive heap regions. Care should be taken when
-     * changing the implementation and the cache array should not be assigned
-     * with new Integer object(s) after initialization.
+     * 警告：缓存与 CDS 一起归档，并在运行时从共享归档中重新加载。
+     * 归档的缓存（Integer[]）和 Integer 对象存储在封闭的归档堆区域中。
+     * 在更改实现时应小心，初始化后不应将新的 Integer 对象分配给缓存数组。
      */
-
     private static final class IntegerCache {
+        // 缓存的最小值为 -128
         static final int low = -128;
+        // 缓存的最大值，默认为 127，但可以通过系统属性进行配置
         static final int high;
 
+        // 缓存数组，用于存储 Integer 对象
         @Stable
         static final Integer[] cache;
+        // 归档缓存数组，用于从共享归档中加载缓存
         static Integer[] archivedCache;
 
         static {
-            // high value may be configured by property
+            // 默认 high 值为 127
             int h = 127;
-            String integerCacheHighPropValue =
-                VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
+            // 尝试从系统属性获取 "java.lang.Integer.IntegerCache.high" 的配置值
+            String integerCacheHighPropValue = VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
             if (integerCacheHighPropValue != null) {
                 try {
+                    // 将配置的值解析为整数，并确保它至少为 127
                     h = Math.max(parseInt(integerCacheHighPropValue), 127);
-                    // Maximum array size is Integer.MAX_VALUE
-                    h = Math.min(h, Integer.MAX_VALUE - (-low) -1);
-                } catch( NumberFormatException nfe) {
-                    // If the property cannot be parsed into an int, ignore it.
+                    // 确保 h 不超过 Integer.MAX_VALUE 的有效范围
+                    h = Math.min(h, Integer.MAX_VALUE - (-low) - 1);
+                } catch (NumberFormatException nfe) {
+                    // 如果无法将属性值解析为整数，则忽略并使用默认值 127
                 }
             }
+            // 设置 high 的最终值
             high = h;
 
-            // Load IntegerCache.archivedCache from archive, if possible
+            // 如果可能，从归档加载 IntegerCache.archivedCache
             CDS.initializeFromArchive(IntegerCache.class);
+            // 缓存的大小为 (high - low) + 1
             int size = (high - low) + 1;
-
-            // Use the archived cache if it exists and is large enough
+            // 如果 archivedCache 不存在或大小不够，则重新创建缓存
             if (archivedCache == null || size > archivedCache.length) {
                 Integer[] c = new Integer[size];
                 int j = low;
-                // If archive has Integer cache, we must use all instances from it.
-                // Otherwise, the identity checks between archived Integers and
-                // runtime-cached Integers would fail.
+                // 如果归档缓存存在，则使用归档中的实例填充缓存
+                // 否则会导致归档的 Integer 对象与运行时缓存的 Integer 对象身份不一致
                 int archivedSize = (archivedCache == null) ? 0 : archivedCache.length;
                 for (int i = 0; i < archivedSize; i++) {
                     c[i] = archivedCache[i];
+                    // 确保归档中的每个 Integer 实例与当前值一致
                     assert j == archivedCache[i];
                     j++;
                 }
-                // Fill the rest of the cache.
+                // 填充剩余的缓存空间
                 for (int i = archivedSize; i < size; i++) {
                     c[i] = new Integer(j++);
                 }
+                // 更新归档缓存
                 archivedCache = c;
             }
+            // 将最终的缓存引用赋给 cache
             cache = archivedCache;
-            // range [-128, 127] must be interned (JLS7 5.1.7)
+            // 确保 high 至少为 127（符合 JLS 规范要求）
             assert IntegerCache.high >= 127;
         }
 
-        private IntegerCache() {}
+        // 构造函数私有化，防止实例化
+        private IntegerCache() {
+        }
     }
+
 
     /**
      * Returns an {@code Integer} instance representing the specified
@@ -996,7 +1003,7 @@ public final class Integer extends Number
      *
      * @param  i an {@code int} value.
      * @return an {@code Integer} instance representing {@code i}.
-     * @since  1.5
+     * @since 1.5
      */
     @IntrinsicCandidate
     public static Integer valueOf(int i) {
@@ -1024,7 +1031,7 @@ public final class Integer extends Number
      * {@link #valueOf(int)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9", forRemoval = true)
+    @Deprecated(since = "9", forRemoval = true)
     public Integer(int value) {
         this.value = value;
     }
@@ -1037,7 +1044,7 @@ public final class Integer extends Number
      * {@code parseInt} method for radix 10.
      *
      * @param   s   the {@code String} to be converted to an {@code Integer}.
-     * @throws      NumberFormatException if the {@code String} does not
+     * @throws NumberFormatException if the {@code String} does not
      *              contain a parsable integer.
      *
      * @deprecated
@@ -1046,7 +1053,7 @@ public final class Integer extends Number
      * {@code int} primitive, or use {@link #valueOf(String)}
      * to convert a string to an {@code Integer} object.
      */
-    @Deprecated(since="9", forRemoval = true)
+    @Deprecated(since = "9", forRemoval = true)
     public Integer(String s) throws NumberFormatException {
         this.value = parseInt(s, 10);
     }
@@ -1057,7 +1064,7 @@ public final class Integer extends Number
      * @jls 5.1.3 Narrowing Primitive Conversion
      */
     public byte byteValue() {
-        return (byte)value;
+        return (byte) value;
     }
 
     /**
@@ -1066,7 +1073,7 @@ public final class Integer extends Number
      * @jls 5.1.3 Narrowing Primitive Conversion
      */
     public short shortValue() {
-        return (short)value;
+        return (short) value;
     }
 
     /**
@@ -1085,7 +1092,7 @@ public final class Integer extends Number
      * @see Integer#toUnsignedLong(int)
      */
     public long longValue() {
-        return (long)value;
+        return (long) value;
     }
 
     /**
@@ -1094,7 +1101,7 @@ public final class Integer extends Number
      * @jls 5.1.2 Widening Primitive Conversion
      */
     public float floatValue() {
-        return (float)value;
+        return (float) value;
     }
 
     /**
@@ -1103,7 +1110,7 @@ public final class Integer extends Number
      * @jls 5.1.2 Widening Primitive Conversion
      */
     public double doubleValue() {
-        return (double)value;
+        return (double) value;
     }
 
     /**
@@ -1113,7 +1120,7 @@ public final class Integer extends Number
      * the integer value were given as an argument to the {@link
      * java.lang.Integer#toString(int)} method.
      *
-     * @return  a string representation of the value of this object in
+     * @return a string representation of the value of this object in
      *          base&nbsp;10.
      */
     public String toString() {
@@ -1123,7 +1130,7 @@ public final class Integer extends Number
     /**
      * Returns a hash code for this {@code Integer}.
      *
-     * @return  a hash code value for this object, equal to the
+     * @return a hash code value for this object, equal to the
      *          primitive {@code int} value represented by this
      *          {@code Integer} object.
      */
@@ -1186,7 +1193,7 @@ public final class Integer extends Number
      * </blockquote>
      *
      * @param   nm   property name.
-     * @return  the {@code Integer} value of the property.
+     * @return the {@code Integer} value of the property.
      * @see     java.lang.System#getProperty(java.lang.String)
      * @see     java.lang.System#getProperty(java.lang.String, java.lang.String)
      */
@@ -1230,7 +1237,7 @@ public final class Integer extends Number
      *
      * @param   nm   property name.
      * @param   val   default value.
-     * @return  the {@code Integer} value of the property.
+     * @return the {@code Integer} value of the property.
      * @see     java.lang.System#getProperty(java.lang.String)
      * @see     java.lang.System#getProperty(java.lang.String, java.lang.String)
      */
@@ -1270,7 +1277,7 @@ public final class Integer extends Number
      *
      * @param   nm   property name.
      * @param   val   default value.
-     * @return  the {@code Integer} value of the property.
+     * @return the {@code Integer} value of the property.
      * @see     System#getProperty(java.lang.String)
      * @see     System#getProperty(java.lang.String, java.lang.String)
      */
@@ -1325,9 +1332,9 @@ public final class Integer extends Number
      * permitted in the {@code String}.
      *
      * @param     nm the {@code String} to decode.
-     * @return    an {@code Integer} object holding the {@code int}
+     * @return an {@code Integer} object holding the {@code int}
      *             value represented by {@code nm}
-     * @throws    NumberFormatException  if the {@code String} does not
+     * @throws NumberFormatException  if the {@code String} does not
      *            contain a parsable integer.
      * @see java.lang.Integer#parseInt(java.lang.String, int)
      */
@@ -1351,13 +1358,11 @@ public final class Integer extends Number
         if (nm.startsWith("0x", index) || nm.startsWith("0X", index)) {
             index += 2;
             radix = 16;
-        }
-        else if (nm.startsWith("#", index)) {
-            index ++;
+        } else if (nm.startsWith("#", index)) {
+            index++;
             radix = 16;
-        }
-        else if (nm.startsWith("0", index) && nm.length() > 1 + index) {
-            index ++;
+        } else if (nm.startsWith("0", index) && nm.length() > 1 + index) {
+            index++;
             radix = 8;
         }
 
@@ -1372,7 +1377,7 @@ public final class Integer extends Number
             // handles this case, and causes any genuine format error to be
             // rethrown.
             String constant = negative ? ("-" + nm.substring(index))
-                                       : nm.substring(index);
+                    : nm.substring(index);
             result = parseInt(constant, radix);
         }
         return result;
@@ -1382,14 +1387,14 @@ public final class Integer extends Number
      * Compares two {@code Integer} objects numerically.
      *
      * @param   anotherInteger   the {@code Integer} to be compared.
-     * @return  the value {@code 0} if this {@code Integer} is
+     * @return the value {@code 0} if this {@code Integer} is
      *          equal to the argument {@code Integer}; a value less than
      *          {@code 0} if this {@code Integer} is numerically less
      *          than the argument {@code Integer}; and a value greater
      *          than {@code 0} if this {@code Integer} is numerically
      *           greater than the argument {@code Integer} (signed
      *           comparison).
-     * @since   1.2
+     * @since 1.2
      */
     public int compareTo(Integer anotherInteger) {
         return compare(this.value, anotherInteger.value);
@@ -1472,7 +1477,7 @@ public final class Integer extends Number
     @IntrinsicCandidate
     public static int divideUnsigned(int dividend, int divisor) {
         // In lieu of tricky code, for now just use long arithmetic.
-        return (int)(toUnsignedLong(dividend) / toUnsignedLong(divisor));
+        return (int) (toUnsignedLong(dividend) / toUnsignedLong(divisor));
     }
 
     /**
@@ -1490,7 +1495,7 @@ public final class Integer extends Number
     @IntrinsicCandidate
     public static int remainderUnsigned(int dividend, int divisor) {
         // In lieu of tricky code, for now just use long arithmetic.
-        return (int)(toUnsignedLong(dividend) % toUnsignedLong(divisor));
+        return (int) (toUnsignedLong(dividend) % toUnsignedLong(divisor));
     }
 
 
@@ -1502,7 +1507,8 @@ public final class Integer extends Number
      *
      * @since 1.5
      */
-    @Native public static final int SIZE = 32;
+    @Native
+    public static final int SIZE = 32;
 
     /**
      * The number of bytes used to represent an {@code int} value in two's
@@ -1574,10 +1580,22 @@ public final class Integer extends Number
         if (i <= 0)
             return i == 0 ? 32 : 0;
         int n = 31;
-        if (i >= 1 << 16) { n -= 16; i >>>= 16; }
-        if (i >= 1 <<  8) { n -=  8; i >>>=  8; }
-        if (i >= 1 <<  4) { n -=  4; i >>>=  4; }
-        if (i >= 1 <<  2) { n -=  2; i >>>=  2; }
+        if (i >= 1 << 16) {
+            n -= 16;
+            i >>>= 16;
+        }
+        if (i >= 1 << 8) {
+            n -= 8;
+            i >>>= 8;
+        }
+        if (i >= 1 << 4) {
+            n -= 4;
+            i >>>= 4;
+        }
+        if (i >= 1 << 2) {
+            n -= 2;
+            i >>>= 2;
+        }
         return n - (i >>> 1);
     }
 
@@ -1601,10 +1619,22 @@ public final class Integer extends Number
         i = ~i & (i - 1);
         if (i <= 0) return i & 32;
         int n = 1;
-        if (i > 1 << 16) { n += 16; i >>>= 16; }
-        if (i > 1 <<  8) { n +=  8; i >>>=  8; }
-        if (i > 1 <<  4) { n +=  4; i >>>=  4; }
-        if (i > 1 <<  2) { n +=  2; i >>>=  2; }
+        if (i > 1 << 16) {
+            n += 16;
+            i >>>= 16;
+        }
+        if (i > 1 << 8) {
+            n += 8;
+            i >>>= 8;
+        }
+        if (i > 1 << 4) {
+            n += 4;
+            i >>>= 4;
+        }
+        if (i > 1 << 2) {
+            n += 2;
+            i >>>= 2;
+        }
         return n + (i >>> 1);
     }
 
@@ -1942,10 +1972,10 @@ public final class Integer extends Number
      */
     @IntrinsicCandidate
     public static int reverseBytes(int i) {
-        return (i << 24)            |
-               ((i & 0xff00) << 8)  |
-               ((i >>> 8) & 0xff00) |
-               (i >>> 24);
+        return (i << 24) |
+                ((i & 0xff00) << 8) |
+                ((i >>> 8) & 0xff00) |
+                (i >>> 24);
     }
 
     /**
@@ -2016,5 +2046,6 @@ public final class Integer extends Number
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
     @java.io.Serial
-    @Native private static final long serialVersionUID = 1360826667806852920L;
+    @Native
+    private static final long serialVersionUID = 1360826667806852920L;
 }
