@@ -1554,24 +1554,18 @@ public final class Integer extends Number
     }
 
     /**
-     * Returns the number of zero bits preceding the highest-order
-     * ("leftmost") one-bit in the two's complement binary representation
-     * of the specified {@code int} value.  Returns 32 if the
-     * specified value has no one-bits in its two's complement representation,
-     * in other words if it is equal to zero.
+     * 返回指定整数在二进制补码表示中，最高位（最左侧的1位）之前的零位数量。
+     * 如果指定值为零，返回32；如果该值为负数，返回0。
      *
-     * <p>Note that this method is closely related to the logarithm base 2.
-     * For all positive {@code int} values x:
+     * <p>此方法与以2为底的对数密切相关。对于所有正整数 {@code x}：
      * <ul>
      * <li>floor(log<sub>2</sub>(x)) = {@code 31 - numberOfLeadingZeros(x)}
      * <li>ceil(log<sub>2</sub>(x)) = {@code 32 - numberOfLeadingZeros(x - 1)}
      * </ul>
      *
-     * @param i the value whose number of leading zeros is to be computed
-     * @return the number of zero bits preceding the highest-order
-     *     ("leftmost") one-bit in the two's complement binary representation
-     *     of the specified {@code int} value, or 32 if the value
-     *     is equal to zero.
+     * @param i 需要计算前导零数量的整数
+     * @return 指定整数在二进制补码表示中，最高位之前的零位数量。如果该值为零，返回32。
+     * 13 -> 00000000000000000000000000001101 -> 28
      * @since 1.5
      */
     @IntrinsicCandidate

@@ -142,109 +142,19 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
     @java.io.Serial
     private static final long serialVersionUID = 362498820763181265L;
 
-    /*
-     * Implementation notes.
-     *
-     * This map usually acts as a binned (bucketed) hash table, but
-     * when bins get too large, they are transformed into bins of
-     * TreeNodes, each structured similarly to those in
-     * java.util.TreeMap. Most methods try to use normal bins, but
-     * relay to TreeNode methods when applicable (simply by checking
-     * instanceof a node).  Bins of TreeNodes may be traversed and
-     * used like any others, but additionally support faster lookup
-     * when overpopulated. However, since the vast majority of bins in
-     * normal use are not overpopulated, checking for existence of
-     * tree bins may be delayed in the course of table methods.
-     *
-     * Tree bins (i.e., bins whose elements are all TreeNodes) are
-     * ordered primarily by hashCode, but in the case of ties, if two
-     * elements are of the same "class C implements Comparable<C>",
-     * type then their compareTo method is used for ordering. (We
-     * conservatively check generic types via reflection to validate
-     * this -- see method comparableClassFor).  The added complexity
-     * of tree bins is worthwhile in providing worst-case O(log n)
-     * operations when keys either have distinct hashes or are
-     * orderable, Thus, performance degrades gracefully under
-     * accidental or malicious usages in which hashCode() methods
-     * return values that are poorly distributed, as well as those in
-     * which many keys share a hashCode, so long as they are also
-     * Comparable. (If neither of these apply, we may waste about a
-     * factor of two in time and space compared to taking no
-     * precautions. But the only known cases stem from poor user
-     * programming practices that are already so slow that this makes
-     * little difference.)
-     *
-     * Because TreeNodes are about twice the size of regular nodes, we
-     * use them only when bins contain enough nodes to warrant use
-     * (see TREEIFY_THRESHOLD). And when they become too small (due to
-     * removal or resizing) they are converted back to plain bins.  In
-     * usages with well-distributed user hashCodes, tree bins are
-     * rarely used.  Ideally, under random hashCodes, the frequency of
-     * nodes in bins follows a Poisson distribution
-     * (http://en.wikipedia.org/wiki/Poisson_distribution) with a
-     * parameter of about 0.5 on average for the default resizing
-     * threshold of 0.75, although with a large variance because of
-     * resizing granularity. Ignoring variance, the expected
-     * occurrences of list size k are (exp(-0.5) * pow(0.5, k) /
-     * factorial(k)). The first values are:
-     *
-     * 0:    0.60653066
-     * 1:    0.30326533
-     * 2:    0.07581633
-     * 3:    0.01263606
-     * 4:    0.00157952
-     * 5:    0.00015795
-     * 6:    0.00001316
-     * 7:    0.00000094
-     * 8:    0.00000006
-     * more: less than 1 in ten million
-     *
-     * The root of a tree bin is normally its first node.  However,
-     * sometimes (currently only upon Iterator.remove), the root might
-     * be elsewhere, but can be recovered following parent links
-     * (method TreeNode.root()).
-     *
-     * All applicable internal methods accept a hash code as an
-     * argument (as normally supplied from a public method), allowing
-     * them to call each other without recomputing user hashCodes.
-     * Most internal methods also accept a "tab" argument, that is
-     * normally the current table, but may be a new or old one when
-     * resizing or converting.
-     *
-     * When bin lists are treeified, split, or untreeified, we keep
-     * them in the same relative access/traversal order (i.e., field
-     * Node.next) to better preserve locality, and to slightly
-     * simplify handling of splits and traversals that invoke
-     * iterator.remove. When using comparators on insertion, to keep a
-     * total ordering (or as close as is required here) across
-     * rebalancings, we compare classes and identityHashCodes as
-     * tie-breakers.
-     *
-     * The use and transitions among plain vs tree modes is
-     * complicated by the existence of subclass LinkedHashMap. See
-     * below for hook methods defined to be invoked upon insertion,
-     * removal and access that allow LinkedHashMap internals to
-     * otherwise remain independent of these mechanics. (This also
-     * requires that a map instance be passed to some utility methods
-     * that may create new nodes.)
-     *
-     * The concurrent-programming-like SSA-based coding style helps
-     * avoid aliasing errors amid all of the twisty pointer operations.
-     */
-
     /**
-     * 默认的初始容量，必须是2的幂
+     * 默认的初始容量16
      */
-    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4;
 
     /**
      * 最大容量，若通过带参数的构造函数隐式指定了更高的值，则使用该值。
-     * 必须是小于或等于 1<<30 的 2 的幂。
+     * 01000000 00000000 00000000 00000000 -> 10 7374 1824
      */
     static final int MAXIMUM_CAPACITY = 1 << 30;
 
     /**
-     * 当构造其中没有指定负载因子时，使用该负载因子
+     * 当构造函数没有指定负载因子时，使用该负载因子
      */
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
@@ -267,6 +177,7 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
 
     /**
      * 允许将链表转化为树结构的最小表容量。
+     * 表容量小于该值时不会树化
      * （否则，如果桶中节点过多，表将被重新调整大小。）
      * 应该至少是 4 * TREEIFY_THRESHOLD，以避免在调整大小和树化阈值之间发生冲突。
      */
@@ -341,51 +252,65 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
      */
     static final int hash(Object key) {
         int h;
+        // key的哈希码 ^ (key的哈希码 >>> 16) h >>> 16: 计算新值，不改变原来的值 ^ 相同为0不同为1
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
     /**
-     * Returns x's Class if it is of the form "class C implements
-     * Comparable<C>", else null.
+     * 返回对象 x 的 Class 类型，如果 x 是 "class C implements Comparable<C>" 形式的类型，
+     * 否则返回 null。
      */
     static Class<?> comparableClassFor(Object x) {
+        // 检查 x 是否是 Comparable 的实例
         if (x instanceof Comparable) {
-            Class<?> c;
-            Type[] ts, as;
-            ParameterizedType p;
-            if ((c = x.getClass()) == String.class) // bypass checks
+            Class<?> c;  // 存储 x 的类
+            Type[] ts, as;  // 存储泛型接口的类型数组和实际类型参数
+            ParameterizedType p;  // 用于表示带参数的类型接口
+            // 如果 x 的类型是 String 类型，直接返回 String 类，跳过其他检查
+            if ((c = x.getClass()) == String.class)
                 return c;
+            // 获取 x 的类实现的所有泛型接口
             if ((ts = c.getGenericInterfaces()) != null) {
+                // 遍历所有实现的泛型接口
                 for (Type t : ts) {
-                    if ((t instanceof ParameterizedType) &&
-                            ((p = (ParameterizedType) t).getRawType() ==
-                                    Comparable.class) &&
-                            (as = p.getActualTypeArguments()) != null &&
-                            as.length == 1 && as[0] == c) // type arg is c
-                        return c;
+                    // 检查当前接口是否是参数化类型（即带有泛型参数的类型）&& 接口的原始类型是否是 Comparable
+                    if ((t instanceof ParameterizedType) && ((p = (ParameterizedType) t).getRawType() == Comparable.class)
+                            // // 检查该接口的泛型参数是否是当前类（即 'c'）
+                            && (as = p.getActualTypeArguments()) != null && as.length == 1 && as[0] == c) {
+                        return c;  // 如果符合条件，返回类 c
+                    }
                 }
             }
         }
+        // 如果没有找到符合条件的 Comparable 接口，返回 null
         return null;
     }
 
-    /**
-     * Returns k.compareTo(x) if x matches kc (k's screened comparable
-     * class), else 0.
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"}) // for cast to Comparable
-    static int compareComparables(Class<?> kc, Object k, Object x) {
-        return (x == null || x.getClass() != kc ? 0 :
-                ((Comparable) k).compareTo(x));
-    }
 
     /**
-     * Returns a power of two size for the given target capacity.
+     * 该方法用于比较两个对象k和x。如果x与k的类类型兼容并且x是k可以比较的类型（即满足Comparable接口），
+     * 则返回k.compareTo(x)，否则返回0。
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"}) // 允许无泛型的原始类型操作，防止编译器警告
+    static int compareComparables(Class<?> kc, Object k, Object x) {
+        // 如果x为null，或者x的类与kc（k的比较类）不相同，返回0；否则执行比较
+        return (x == null || x.getClass() != kc ? 0 :
+                ((Comparable) k).compareTo(x)); // 强制将k转换为Comparable并调用compareTo方法
+    }
+
+
+    /**
+     *
+     * 该方法用于计算给定容量cap的最接近的2的幂次方大小。
+     * 如果给定容量已经是2的幂次方，则返回该值；如果不是，则返回比给定容量大、最接近的2的幂次方值。
      */
     static final int tableSizeFor(int cap) {
+        // 通过Integer.numberOfLeadingZeros(cap - 1)计算最接近的2的幂次方大小
         int n = -1 >>> Integer.numberOfLeadingZeros(cap - 1);
+        // 如果计算结果小于0，返回1；如果大于等于最大容量，返回最大容量；否则返回n+1（确保容量是2的幂次方）
         return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
+
 
     /* ---------------- Fields -------------- */
 
@@ -416,13 +341,9 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
     transient int modCount;
 
     /**
-     * 下一个调整大小的值（容量 * 负载因子）。
-     *
+     * 数组下一次调整长度应该使用该值
      * @serial
      */
-    // （该 javadoc 描述在序列化时是正确的。
-    // 此外，如果表数组尚未分配，则该字段保存初始数组容量，或者零表示
-    // 默认初始容量（DEFAULT_INITIAL_CAPACITY）。）
     int threshold;
 
     /**
@@ -433,54 +354,24 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
 
     /* ---------------- Public operations -------------- */
 
-    /**
-     * Constructs an empty {@code HashMap} with the specified initial
-     * capacity and load factor.
-     *
-     * @apiNote
-     * To create a {@code HashMap} with an initial capacity that accommodates
-     * an expected number of mappings, use {@link #newHashMap(int) newHashMap}.
-     *
-     * @param  initialCapacity the initial capacity
-     * @param  loadFactor      the load factor
-     * @throws IllegalArgumentException if the initial capacity is negative
-     *         or the load factor is nonpositive
-     */
+
     public HashMap(int initialCapacity, float loadFactor) {
         if (initialCapacity < 0)
-            throw new IllegalArgumentException("Illegal initial capacity: " +
-                    initialCapacity);
+            throw new IllegalArgumentException("Illegal initial capacity: " + initialCapacity);
         if (initialCapacity > MAXIMUM_CAPACITY)
             initialCapacity = MAXIMUM_CAPACITY;
         if (loadFactor <= 0 || Float.isNaN(loadFactor))
-            throw new IllegalArgumentException("Illegal load factor: " +
-                    loadFactor);
+            throw new IllegalArgumentException("Illegal load factor: " + loadFactor);
         this.loadFactor = loadFactor;
         this.threshold = tableSizeFor(initialCapacity);
     }
 
-    /**
-     * Constructs an empty {@code HashMap} with the specified initial
-     * capacity and the default load factor (0.75).
-     *
-     * @apiNote
-     * To create a {@code HashMap} with an initial capacity that accommodates
-     * an expected number of mappings, use {@link #newHashMap(int) newHashMap}.
-     *
-     * @param  initialCapacity the initial capacity.
-     * @throws IllegalArgumentException if the initial capacity is negative.
-     */
     public HashMap(int initialCapacity) {
         this(initialCapacity, DEFAULT_LOAD_FACTOR);
     }
 
-    /**
-     * Constructs an empty {@code HashMap} with the default initial capacity
-     * (16) and the default load factor (0.75).
-     * 用默认的初始容量(16)和默认的负载因子(0.75)构造一个空的HashMap
-     */
     public HashMap() {
-        this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
+        this.loadFactor = DEFAULT_LOAD_FACTOR;
     }
 
     /**
@@ -501,49 +392,42 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
     /**
      * Implements Map.putAll and Map constructor.
      *
+     * 该方法实现了 Map.putAll() 方法的功能，并且也在 Map 的构造过程中被调用。
+     *
      * @param m the map
-     * @param evict false when initially constructing this map, else
-     * true (relayed to method afterNodeInsertion).
+     *        这是传入的要添加到当前 Map 的 Map。
+     * @param evict false when initially constructing this map, else true (relayed to method afterNodeInsertion).
+     *        该参数标志在插入节点后是否触发 eviction 行为。初始化时传入 `false`，否则传入 `true`。
      */
     final void putMapEntries(Map<? extends K, ? extends V> m, boolean evict) {
-        int s = m.size();
-        if (s > 0) {
-            if (table == null) { // pre-size
-                double dt = Math.ceil(s / (double) loadFactor);
-                int t = ((dt < (double) MAXIMUM_CAPACITY) ?
-                        (int) dt : MAXIMUM_CAPACITY);
-                if (t > threshold)
-                    threshold = tableSizeFor(t);
+        int s = m.size();  // 获取传入 Map 的大小
+        if (s > 0) {  // 如果传入的 Map 非空
+            if (table == null) { // table 为 null 说明是首次创建 Map，需要预设大小
+                // 计算适合当前 Map 大小的容量，并根据负载因子（loadFactor）调整
+                double dt = Math.ceil(s / (double) loadFactor); // 计算初始容量
+                int t = ((dt < (double) MAXIMUM_CAPACITY) ? (int) dt : MAXIMUM_CAPACITY); // 选择一个小于 MAXIMUM_CAPACITY 的大小
+                if (t > threshold) // 如果当前容量大于阈值，更新阈值
+                    threshold = tableSizeFor(t);  // 调用 tableSizeFor 方法调整表的大小
             } else {
-                // Because of linked-list bucket constraints, we cannot
-                // expand all at once, but can reduce total resize
-                // effort by repeated doubling now vs later
+                // 如果 table 已经初始化，则需要检查是否需要扩容
+                // 由于链表约束的限制，无法一次性扩展大小，但可以通过多次扩展减少扩容时的开销
                 while (s > threshold && table.length < MAXIMUM_CAPACITY)
-                    resize();
+                    resize();  // 调用 resize 方法扩容
             }
 
+            // 遍历传入的 Map，将每个键值对添加到当前 Map 中
             for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
-                K key = e.getKey();
-                V value = e.getValue();
-                putVal(hash(key), key, value, false, evict);
+                K key = e.getKey();  // 获取键
+                V value = e.getValue();  // 获取值
+                putVal(hash(key), key, value, false, evict);  // 将键值对插入当前 Map
             }
         }
     }
 
-    /**
-     * Returns the number of key-value mappings in this map.
-     *
-     * @return the number of key-value mappings in this map
-     */
     public int size() {
         return size;
     }
 
-    /**
-     * Returns {@code true} if this map contains no key-value mappings.
-     *
-     * @return {@code true} if this map contains no key-value mappings
-     */
     public boolean isEmpty() {
         return size == 0;
     }

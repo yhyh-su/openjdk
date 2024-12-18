@@ -1223,54 +1223,7 @@ public final class Class<T> implements java.io.Serializable,
 
     private native Class<?>[] getInterfaces0();
 
-    /**
-     * Returns the {@code Type}s representing the interfaces
-     * directly implemented by the class or interface represented by
-     * this {@code Class} object.
-     *
-     * <p>If a superinterface is a parameterized type, the
-     * {@code Type} object returned for it must accurately reflect
-     * the actual type arguments used in the source code. The
-     * parameterized type representing each superinterface is created
-     * if it had not been created before. See the declaration of
-     * {@link java.lang.reflect.ParameterizedType ParameterizedType}
-     * for the semantics of the creation process for parameterized
-     * types.
-     *
-     * <p>If this {@code Class} object represents a class, the return value is an array
-     * containing objects representing all interfaces directly implemented by
-     * the class.  The order of the interface objects in the array corresponds
-     * to the order of the interface names in the {@code implements} clause of
-     * the declaration of the class represented by this {@code Class} object.
-     *
-     * <p>If this {@code Class} object represents an interface, the array contains objects
-     * representing all interfaces directly extended by the interface.  The
-     * order of the interface objects in the array corresponds to the order of
-     * the interface names in the {@code extends} clause of the declaration of
-     * the interface represented by this {@code Class} object.
-     *
-     * <p>If this {@code Class} object represents a class or interface that implements no
-     * interfaces, the method returns an array of length 0.
-     *
-     * <p>If this {@code Class} object represents a primitive type or void, the method
-     * returns an array of length 0.
-     *
-     * <p>If this {@code Class} object represents an array type, the
-     * interfaces {@code Cloneable} and {@code java.io.Serializable} are
-     * returned in that order.
-     *
-     * @throws java.lang.reflect.GenericSignatureFormatError
-     *     if the generic class signature does not conform to the
-     *     format specified in section {@jvms 4.7.9} of <cite>The
-     *     Java Virtual Machine Specification</cite>
-     * @throws TypeNotPresentException if any of the generic
-     *     superinterfaces refers to a non-existent type declaration
-     * @throws java.lang.reflect.MalformedParameterizedTypeException
-     *     if any of the generic superinterfaces refer to a parameterized
-     *     type that cannot be instantiated for any reason
-     * @return an array of interfaces directly implemented by this class
-     * @since 1.5
-     */
+    // 获取该类实现的所有参数类型接口
     public Type[] getGenericInterfaces() {
         ClassRepository info = getGenericInfo();
         return (info == null) ?  getInterfaces() : info.getSuperInterfaces();

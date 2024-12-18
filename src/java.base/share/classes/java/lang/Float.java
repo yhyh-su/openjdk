@@ -610,6 +610,7 @@ public final class Float extends Number
      *          {@code false} otherwise.
      */
     public static boolean isNaN(float v) {
+        // NaN 不等于任何值
         return (v != v);
     }
 
