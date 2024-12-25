@@ -75,8 +75,8 @@ import sun.security.action.GetPropertyAction;
  * references to these copies exist).
  * @param <T> the type of the thread local's value
  *
- * @author  Josh Bloch and Doug Lea
- * @since   1.2
+ * @author Josh Bloch and Doug Lea
+ * @since 1.2
  */
 public class ThreadLocal<T> {
     private static final boolean TRACE_VTHREAD_LOCALS = traceVirtualThreadLocals();
@@ -98,7 +98,7 @@ public class ThreadLocal<T> {
      * zero.
      */
     private static final AtomicInteger nextHashCode =
-        new AtomicInteger();
+            new AtomicInteger();
 
     /**
      * The difference between successively generated hash codes - turns
@@ -279,21 +279,21 @@ public class ThreadLocal<T> {
      *
      * @since 1.5
      */
-     public void remove() {
-         remove(Thread.currentThread());
-     }
+    public void remove() {
+        remove(Thread.currentThread());
+    }
 
-     void removeCarrierThreadLocal() {
-         assert this instanceof CarrierThreadLocal<T>;
-         remove(Thread.currentCarrierThread());
-     }
+    void removeCarrierThreadLocal() {
+        assert this instanceof CarrierThreadLocal<T>;
+        remove(Thread.currentCarrierThread());
+    }
 
-     private void remove(Thread t) {
-         ThreadLocalMap m = getMap(t);
-         if (m != null) {
-             m.remove(this);
-         }
-     }
+    private void remove(Thread t) {
+        ThreadLocalMap m = getMap(t);
+        if (m != null) {
+            m.remove(this);
+        }
+    }
 
     /**
      * Get the map associated with a ThreadLocal. Overridden in
@@ -318,11 +318,10 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Factory method to create map of inherited thread locals.
-     * Designed to be called only from Thread constructor.
-     *
-     * @param  parentMap the map associated with parent thread
-     * @return a map containing the parent's inheritable bindings
+     * 创建继承的线程局部变量映射的工厂方法。
+     * 仅设计用于从 Thread 构造函数中调用。
+     * @param  parentMap 与父线程关联的映射
+     * @return 包含父线程可继承绑定的映射
      */
     static ThreadLocalMap createInheritedMap(ThreadLocalMap parentMap) {
         return new ThreadLocalMap(parentMap);
@@ -450,33 +449,46 @@ public class ThreadLocal<T> {
         }
 
         /**
-         * Construct a new map including all Inheritable ThreadLocals
-         * from given parent map. Called only by createInheritedMap.
-         *
-         * @param parentMap the map associated with parent thread.
+         * 构造一个新的映射，将给定父线程映射中的所有 InheritableThreadLocal 包含进来。
+         * 仅通过 createInheritedMap 方法调用。
+         * @param parentMap 与父线程关联的映射。
          */
         private ThreadLocalMap(ThreadLocalMap parentMap) {
+            // 获取父线程映射中的所有条目（Entry），并计算其长度
             Entry[] parentTable = parentMap.table;
             int len = parentTable.length;
+
+            // 设置阈值，决定表的大小，具体阈值根据实现的需要设置
             setThreshold(len);
+
+            // 初始化当前线程的映射表，大小与父线程的映射表相同
             table = new Entry[len];
 
+            // 遍历父线程映射中的所有条目，处理每个条目
             for (Entry e : parentTable) {
                 if (e != null) {
+                    // 从父线程条目中获取 ThreadLocal 键，进行类型转换
                     @SuppressWarnings("unchecked")
                     ThreadLocal<Object> key = (ThreadLocal<Object>) e.get();
+                    // 如果键不为空，表示该 ThreadLocal 依然有效
                     if (key != null) {
+                        // 获取与父线程条目相关的值，并通过子类方法调整值
                         Object value = key.childValue(e.value);
+                        // 创建一个新的条目，将键和值存储在其中
                         Entry c = new Entry(key, value);
+                        // 计算该条目的哈希值并定位到映射表中的位置
                         int h = key.threadLocalHashCode & (len - 1);
+                        // 如果目标位置已经有条目，依次查找下一个位置，直到找到空位
                         while (table[h] != null)
                             h = nextIndex(h, len);
+                        // 将新条目插入到找到的位置
                         table[h] = c;
-                        size++;
+                        size++; // 增加映射表的大小
                     }
                 }
             }
         }
+
 
         /**
          * Returns the number of elements in the map.
@@ -544,7 +556,7 @@ public class ThreadLocal<T> {
 
             Entry[] tab = table;
             int len = tab.length;
-            int i = key.threadLocalHashCode & (len-1);
+            int i = key.threadLocalHashCode & (len - 1);
 
             for (Entry e = tab[i];
                  e != null;
@@ -572,7 +584,7 @@ public class ThreadLocal<T> {
         private void remove(ThreadLocal<?> key) {
             Entry[] tab = table;
             int len = tab.length;
-            int i = key.threadLocalHashCode & (len-1);
+            int i = key.threadLocalHashCode & (len - 1);
             for (Entry e = tab[i];
                  e != null;
                  e = tab[i = nextIndex(i, len)]) {
@@ -738,7 +750,7 @@ public class ThreadLocal<T> {
                     removed = true;
                     i = expungeStaleEntry(i);
                 }
-            } while ( (n >>>= 1) != 0);
+            } while ((n >>>= 1) != 0);
             return removed;
         }
 
@@ -822,7 +834,7 @@ public class ThreadLocal<T> {
             try {
                 var stack = StackWalker.getInstance().walk(s ->
                         s.skip(1)  // skip caller
-                         .collect(Collectors.toList()));
+                                .collect(Collectors.toList()));
                 System.out.println(t);
                 for (StackWalker.StackFrame frame : stack) {
                     System.out.format("    %s%n", frame.toStackTraceElement());

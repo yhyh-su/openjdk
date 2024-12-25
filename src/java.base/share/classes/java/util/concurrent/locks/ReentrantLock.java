@@ -37,6 +37,7 @@ package java.util.concurrent.locks;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+
 import jdk.internal.vm.annotation.ReservedStackAccess;
 
 /**
@@ -108,7 +109,7 @@ import jdk.internal.vm.annotation.ReservedStackAccess;
  */
 public class ReentrantLock implements Lock, java.io.Serializable {
     private static final long serialVersionUID = 7373984872572414699L;
-    /** Synchronizer providing all implementation mechanics */
+    /** 提供所有实现机制的同步器 */
     private final Sync sync;
 
     /**
@@ -120,52 +121,62 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         private static final long serialVersionUID = -5179523762034025860L;
 
         /**
-         * Performs non-fair tryLock.
+         * 执行非公平的 tryLock 操作。
+         * <p>
+         * 该方法尝试获取独占锁，如果锁当前未被占用，则成功获取锁并返回 true；
+         * 如果锁已经被当前线程持有，则增加当前线程的锁计数并返回 true；
+         * 如果锁已经被其他线程占用，则返回 false。
+         * </p>
+         * @return 如果成功获取锁，返回 true；如果获取失败（即锁已被其他线程占用），返回 false。
          */
         @ReservedStackAccess
         final boolean tryLock() {
             Thread current = Thread.currentThread();
             int c = getState();
+            // 如果锁当前是空闲的（状态为 0）
             if (c == 0) {
+                // 尝试通过 CAS 操作将锁状态从 0 设置为 1（表示获取锁）
                 if (compareAndSetState(0, 1)) {
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             } else if (getExclusiveOwnerThread() == current) {
-                if (++c < 0) // overflow
+                if (++c < 0) {
                     throw new Error("Maximum lock count exceeded");
+                }
                 setState(c);
                 return true;
             }
             return false;
         }
 
+
         /**
-         * Checks for reentrancy and acquires if lock immediately
-         * available under fair vs nonfair rules. Locking methods
-         * perform initialTryLock check before relaying to
-         * corresponding AQS acquire methods.
+         * 检查重入性，并根据公平与非公平规则在锁立即可用时进行获取。
+         * 锁定方法在调用相应的 AQS 获取方法之前，会先执行 initialTryLock 检查。
          */
         abstract boolean initialTryLock();
 
+        /**
+         * 锁定当前同步器。如果第一次尝试锁定失败，则继续尝试获取锁。
+         */
         @ReservedStackAccess
         final void lock() {
+            // 尝试第一次锁定，如果失败，则调用 acquire(1) 来进一步尝试获取锁
             if (!initialTryLock())
                 acquire(1);
         }
 
         @ReservedStackAccess
         final void lockInterruptibly() throws InterruptedException {
-            if (Thread.interrupted())
-                throw new InterruptedException();
+            if (Thread.interrupted()) throw new InterruptedException();
             if (!initialTryLock())
                 acquireInterruptibly(1);
         }
 
         @ReservedStackAccess
         final boolean tryLockNanos(long nanos) throws InterruptedException {
-            if (Thread.interrupted())
-                throw new InterruptedException();
+            if (Thread.interrupted()) throw new InterruptedException();
             return initialTryLock() || tryAcquireNanos(1, nanos);
         }
 
@@ -209,7 +220,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * Reconstitutes the instance from a stream (that is, deserializes it).
          */
         private void readObject(java.io.ObjectInputStream s)
-            throws java.io.IOException, ClassNotFoundException {
+                throws java.io.IOException, ClassNotFoundException {
             s.defaultReadObject();
             setState(0); // reset to unlocked state
         }
@@ -221,31 +232,49 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     static final class NonfairSync extends Sync {
         private static final long serialVersionUID = 7316153563782823691L;
 
+        /**
+         * 尝试获取锁，第一次尝试没有保护机制。该方法用于在没有保护的情况下
+         * 进行初始的锁定尝试，如果成功则锁定当前线程。如果当前线程已持有锁，
+         * 则允许重入并增加锁计数。
+         *
+         * @return 如果成功获取锁或重入，则返回 {@code true}；否则返回 {@code false}。
+         */
         final boolean initialTryLock() {
-            Thread current = Thread.currentThread();
-            if (compareAndSetState(0, 1)) { // first attempt is unguarded
-                setExclusiveOwnerThread(current);
+            Thread current = Thread.currentThread();  // 获取当前线程
+            // 尝试将同步状态从 0 设置为 1，表示第一次获取锁
+            if (compareAndSetState(0, 1)) {  // 第一次尝试没有保护机制
+                setExclusiveOwnerThread(current);  // 将当前线程设置为锁的独占拥有者
                 return true;
-            } else if (getExclusiveOwnerThread() == current) {
-                int c = getState() + 1;
-                if (c < 0) // overflow
-                    throw new Error("Maximum lock count exceeded");
+            }
+            // 如果当前线程已经是锁的拥有者，则允许重入
+            else if (getExclusiveOwnerThread() == current) {
+                int c = getState() + 1;  // 增加锁计数（重入次数）
+                // 如果锁计数溢出，则抛出异常
+                if (c < 0) throw new Error("Maximum lock count exceeded");
                 setState(c);
                 return true;
-            } else
-                return false;
+            }
+            // 如果当前线程不是锁的拥有者，则无法获取锁
+            else return false;
         }
 
+
         /**
-         * Acquire for non-reentrant cases after initialTryLock prescreen
+         * 在初始尝试锁定（通过 initialTryLock）后，用于非重入锁的获取。
+         * 该方法尝试获取锁并检查锁的状态。
+         * @param acquires 锁定请求的数量。在通常的实现中，acquires 可能是 1，表示一个请求获取锁。
+         * @return 如果成功获取锁，返回 {@code true}；否则返回 {@code false}。
          */
         protected final boolean tryAcquire(int acquires) {
+            // 如果当前状态是 0，表示锁未被任何线程持有
             if (getState() == 0 && compareAndSetState(0, acquires)) {
+                // 将当前线程设置为锁的独占拥有者
                 setExclusiveOwnerThread(Thread.currentThread());
                 return true;
             }
             return false;
         }
+
     }
 
     /**
@@ -279,7 +308,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          */
         protected final boolean tryAcquire(int acquires) {
             if (getState() == 0 && !hasQueuedPredecessors() &&
-                compareAndSetState(0, acquires)) {
+                    compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
                 return true;
             }
@@ -731,7 +760,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             throw new NullPointerException();
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
-        return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject) condition);
     }
 
     /**
@@ -754,7 +783,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             throw new NullPointerException();
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
-        return sync.getWaitQueueLength((AbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.getWaitQueueLength((AbstractQueuedSynchronizer.ConditionObject) condition);
     }
 
     /**
@@ -779,7 +808,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             throw new NullPointerException();
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
-        return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject) condition);
     }
 
     /**
@@ -793,7 +822,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public String toString() {
         Thread o = sync.getOwner();
         return super.toString() + ((o == null) ?
-                                   "[Unlocked]" :
-                                   "[Locked by thread " + o.getName() + "]");
+                "[Unlocked]" :
+                "[Locked by thread " + o.getName() + "]");
     }
 }

@@ -38,6 +38,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import jdk.internal.event.VirtualThreadEndEvent;
 import jdk.internal.event.VirtualThreadStartEvent;
 import jdk.internal.event.VirtualThreadSubmitFailedEvent;
@@ -56,6 +57,7 @@ import jdk.internal.vm.annotation.JvmtiHideEvents;
 import jdk.internal.vm.annotation.JvmtiMountTransition;
 import jdk.internal.vm.annotation.ReservedStackAccess;
 import sun.nio.ch.Interruptible;
+
 import static java.util.concurrent.TimeUnit.*;
 
 /**
@@ -122,33 +124,33 @@ final class VirtualThread extends BaseVirtualThread {
      * YIELDING -> RUNNING         // cont.yield failed
      *  YIELDED -> RUNNING         // continue execution after Thread.yield
      */
-    private static final int NEW      = 0;
-    private static final int STARTED  = 1;
-    private static final int RUNNING  = 2;     // runnable-mounted
+    private static final int NEW = 0;
+    private static final int STARTED = 1;
+    private static final int RUNNING = 2;     // runnable-mounted
 
     // untimed and timed parking
-    private static final int PARKING       = 3;
-    private static final int PARKED        = 4;     // unmounted
-    private static final int PINNED        = 5;     // mounted
+    private static final int PARKING = 3;
+    private static final int PARKED = 4;     // unmounted
+    private static final int PINNED = 5;     // mounted
     private static final int TIMED_PARKING = 6;
-    private static final int TIMED_PARKED  = 7;     // unmounted
-    private static final int TIMED_PINNED  = 8;     // mounted
-    private static final int UNPARKED      = 9;     // unmounted but runnable
+    private static final int TIMED_PARKED = 7;     // unmounted
+    private static final int TIMED_PINNED = 8;     // mounted
+    private static final int UNPARKED = 9;     // unmounted but runnable
 
     // Thread.yield
     private static final int YIELDING = 10;
-    private static final int YIELDED  = 11;         // unmounted but runnable
+    private static final int YIELDED = 11;         // unmounted but runnable
 
     // monitor enter
-    private static final int BLOCKING  = 12;
-    private static final int BLOCKED   = 13;        // unmounted
+    private static final int BLOCKING = 12;
+    private static final int BLOCKED = 13;        // unmounted
     private static final int UNBLOCKED = 14;        // unmounted but runnable
 
     // monitor wait/timed-wait
-    private static final int WAITING       = 15;
-    private static final int WAIT          = 16;    // waiting in Object.wait
+    private static final int WAITING = 15;
+    private static final int WAIT = 16;    // waiting in Object.wait
     private static final int TIMED_WAITING = 17;
-    private static final int TIMED_WAIT    = 18;    // waiting in timed-Object.wait
+    private static final int TIMED_WAIT = 18;    // waiting in timed-Object.wait
 
     private static final int TERMINATED = 99;  // final state
 
@@ -200,35 +202,38 @@ final class VirtualThread extends BaseVirtualThread {
     }
 
     /**
-     * Creates a new {@code VirtualThread} to run the given task with the given
-     * scheduler. If the given scheduler is {@code null} and the current thread
-     * is a platform thread then the newly created virtual thread will use the
-     * default scheduler. If given scheduler is {@code null} and the current
-     * thread is a virtual thread then the current thread's scheduler is used.
-     *
-     * @param scheduler the scheduler or null
-     * @param name thread name
-     * @param characteristics characteristics
-     * @param task the task to execute
+     * 创建一个新的 VirtualThread 来执行给定的任务，并使用给定的调度器。
+     * 如果给定的调度器为 {@code null}，并且当前线程是平台线程，那么新创建的虚拟线程将使用默认的调度器。
+     * 如果给定的调度器为 {@code null}，并且当前线程是虚拟线程，则使用当前线程的调度器。
+     * @param scheduler 线程调度器，或 {@code null}
+     * @param name 线程名称
+     * @param characteristics 线程特性
+     * @param task 要执行的任务
      */
     VirtualThread(Executor scheduler, String name, int characteristics, Runnable task) {
+        // 调用父类 Thread 的构造方法，初始化线程的名称、特性，并设置为不绑定到操作系统线程
         super(name, characteristics, /*bound*/ false);
         Objects.requireNonNull(task);
-
-        // choose scheduler if not specified
+        // 如果没有指定调度器，则选择默认的调度器
         if (scheduler == null) {
+            // 获取当前线程
             Thread parent = Thread.currentThread();
+            // 如果当前线程是虚拟线程，使用当前线程的调度器
             if (parent instanceof VirtualThread vparent) {
                 scheduler = vparent.scheduler;
             } else {
+                // 如果当前线程是平台线程，则使用默认调度器
                 scheduler = DEFAULT_SCHEDULER;
             }
         }
-
+        // 将选择的调度器赋值给当前线程
         this.scheduler = scheduler;
+        // 创建一个 VThreadContinuation 对象，表示虚拟线程的执行任务
         this.cont = new VThreadContinuation(this, task);
+        // 定义执行虚拟线程任务的方法引用
         this.runContinuation = this::runContinuation;
     }
+
 
     /**
      * The continuation that a virtual thread executes.
@@ -237,9 +242,11 @@ final class VirtualThread extends BaseVirtualThread {
         VThreadContinuation(VirtualThread vthread, Runnable task) {
             super(VTHREAD_SCOPE, wrap(vthread, task));
         }
+
         @Override
         protected void onPinned(Continuation.Pinned reason) {
         }
+
         private static Runnable wrap(VirtualThread vthread, Runnable task) {
             return new Runnable() {
                 @Hidden
@@ -889,7 +896,7 @@ final class VirtualThread extends BaseVirtualThread {
      */
     private void waitTimeoutExpired(byte seqNo) {
         assert !Thread.currentThread().isVirtual();
-        for (;;) {
+        for (; ; ) {
             boolean unblocked = false;
             synchronized (timedWaitLock()) {
                 if (seqNo != timedWaitSeqNo) {
@@ -1395,6 +1402,7 @@ final class VirtualThread extends BaseVirtualThread {
     private static native void notifyJvmtiDisableSuspend(boolean enter);
 
     private static native void registerNatives();
+
     static {
         registerNatives();
 
@@ -1427,10 +1435,11 @@ final class VirtualThread extends BaseVirtualThread {
         } else {
             minRunnable = Integer.max(parallelism / 2, 1);
         }
-        Thread.UncaughtExceptionHandler handler = (t, e) -> { };
+        Thread.UncaughtExceptionHandler handler = (t, e) -> {
+        };
         boolean asyncMode = true; // FIFO
         return new ForkJoinPool(parallelism, factory, handler, asyncMode,
-                     0, maxPoolSize, minRunnable, pool -> true, 30, SECONDS);
+                0, maxPoolSize, minRunnable, pool -> true, 30, SECONDS);
     }
 
     /**
@@ -1461,11 +1470,11 @@ final class VirtualThread extends BaseVirtualThread {
         var schedulers = new ScheduledExecutorService[queueCount];
         for (int i = 0; i < queueCount; i++) {
             ScheduledThreadPoolExecutor stpe = (ScheduledThreadPoolExecutor)
-                Executors.newScheduledThreadPool(1, task -> {
-                    Thread t = InnocuousThread.newThread("VirtualThread-unparker", task);
-                    t.setDaemon(true);
-                    return t;
-                });
+                    Executors.newScheduledThreadPool(1, task -> {
+                        Thread t = InnocuousThread.newThread("VirtualThread-unparker", task);
+                        t.setDaemon(true);
+                        return t;
+                    });
             stpe.setRemoveOnCancelPolicy(true);
             schedulers[i] = stpe;
         }

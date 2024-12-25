@@ -25,43 +25,40 @@
 package java.lang;
 
 /**
- * Base class for virtual thread implementations.
+ * 虚拟线程实现的基类。
  */
 abstract sealed class BaseVirtualThread extends Thread
         permits VirtualThread, ThreadBuilders.BoundVirtualThread {
 
     /**
-     * Initializes a virtual Thread.
-     *
-     * @param name thread name, can be null
-     * @param characteristics thread characteristics
-     * @param bound true when bound to an OS thread
+     * 初始化一个虚拟线程。
+     * @param name 线程名称，可以为 null
+     * @param characteristics 线程的特性
+     * @param bound 当线程绑定到操作系统线程时为 true
      */
     BaseVirtualThread(String name, int characteristics, boolean bound) {
+        // 调用父类 Thread 的构造方法进行初始化
         super(name, characteristics, bound);
     }
 
     /**
-     * Parks the current virtual thread until the parking permit is available or
-     * the thread is interrupted.
+     * 将当前虚拟线程挂起，直到停车许可证可用或线程被中断。
      *
-     * The behavior of this method when the current thread is not this thread
-     * is not defined.
+     * 如果当前线程不是此线程，行为未定义。
      */
     abstract void park();
 
     /**
-     * Parks current virtual thread up to the given waiting time until the parking
-     * permit is available or the thread is interrupted.
+     * 将当前虚拟线程挂起，直到停车许可证可用、线程被中断，或达到指定的等待时间（纳秒）。
      *
-     * The behavior of this method when the current thread is not this thread
-     * is not defined.
+     * 如果当前线程不是此线程，行为未定义。
      */
     abstract void parkNanos(long nanos);
 
     /**
-     * Makes available the parking permit to the given this virtual thread.
+     * 向指定的虚拟线程释放停车许可证。
      */
     abstract void unpark();
 }
+
 

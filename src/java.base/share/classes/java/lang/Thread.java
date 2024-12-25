@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.StructureViolationException;
 import java.util.concurrent.locks.LockSupport;
+
 import jdk.internal.event.ThreadSleepEvent;
 import jdk.internal.misc.TerminatingThreadLocal;
 import jdk.internal.misc.Unsafe;
@@ -47,6 +48,7 @@ import jdk.internal.vm.annotation.Hidden;
 import jdk.internal.vm.annotation.IntrinsicCandidate;
 import jdk.internal.vm.annotation.Stable;
 import sun.nio.ch.Interruptible;
+
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -203,11 +205,12 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  *   </tbody>
  * </table>
  *
- * @since   1.0
+ * @since 1.0
  */
 public class Thread implements Runnable {
     /* Make sure registerNatives is the first thing <clinit> does. */
     private static native void registerNatives();
+
     static {
         registerNatives();
     }
@@ -234,29 +237,40 @@ public class Thread implements Runnable {
     // context ClassLoader
     private volatile ClassLoader contextClassLoader;
 
-    // Additional fields for platform threads.
-    // All fields, except task, are accessed directly by the VM.
+    // 平台线程的附加字段。
+// 除了 task 字段，所有字段都由虚拟机直接访问。
     private static class FieldHolder {
+        // 线程所在的线程组
         final ThreadGroup group;
+
+        // 线程执行的任务
         final Runnable task;
+
+        // 线程的栈大小
         final long stackSize;
+
+        // 线程的优先级，volatile 表示该字段可能在多个线程之间被访问，因此每次读取都需要确保获取最新的值
         volatile int priority;
+
+        // 线程是否是守护线程，volatile 同样确保该字段在多个线程之间的可见性
         volatile boolean daemon;
+
+        // 线程的状态，volatile 确保线程状态在多线程环境下的同步
         volatile int threadStatus;
 
-        FieldHolder(ThreadGroup group,
-                    Runnable task,
-                    long stackSize,
-                    int priority,
-                    boolean daemon) {
-            this.group = group;
-            this.task = task;
-            this.stackSize = stackSize;
-            this.priority = priority;
-            if (daemon)
-                this.daemon = true;
+        // 构造方法，初始化上述字段
+        FieldHolder(ThreadGroup group, Runnable task, long stackSize, int priority, boolean daemon) {
+            this.group = group;      // 设置线程组
+            this.task = task;        // 设置线程任务
+            this.stackSize = stackSize; // 设置线程栈大小
+            this.priority = priority;  // 设置线程优先级
+            if (daemon) {
+                this.daemon = true;  // 如果是守护线程，设置 daemon 字段为 true
+            }
         }
     }
+
+
     private final FieldHolder holder;
 
     /*
@@ -266,8 +280,7 @@ public class Thread implements Runnable {
     ThreadLocal.ThreadLocalMap threadLocals;
 
     /*
-     * InheritableThreadLocal values pertaining to this thread. This map is
-     * maintained by the InheritableThreadLocal class.
+     * 与此线程相关的 InheritableThreadLocal 值。此映射由 InheritableThreadLocal 类维护。
      */
     ThreadLocal.ThreadLocalMap inheritableThreadLocals;
 
@@ -390,7 +403,7 @@ public class Thread implements Runnable {
 
     /**
      * Returns the Thread object for the current thread.
-     * @return  the current thread
+     * @return the current thread
      */
     @IntrinsicCandidate
     public static native Thread currentThread();
@@ -497,10 +510,10 @@ public class Thread implements Runnable {
      * @param  millis
      *         the length of time to sleep in milliseconds
      *
-     * @throws  IllegalArgumentException
+     * @throws IllegalArgumentException
      *          if the value of {@code millis} is negative
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
@@ -526,11 +539,11 @@ public class Thread implements Runnable {
      * @param  nanos
      *         {@code 0-999999} additional nanoseconds to sleep
      *
-     * @throws  IllegalArgumentException
+     * @throws IllegalArgumentException
      *          if the value of {@code millis} is negative, or the value of
      *          {@code nanos} is not in the range {@code 0-999999}
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
@@ -559,7 +572,7 @@ public class Thread implements Runnable {
      * @param  duration
      *         the duration to sleep
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if the current thread is interrupted while sleeping. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
@@ -611,7 +624,8 @@ public class Thread implements Runnable {
      * @since 9
      */
     @IntrinsicCandidate
-    public static void onSpinWait() {}
+    public static void onSpinWait() {
+    }
 
     /**
      * Characteristic value signifying that initial values for {@link
@@ -637,72 +651,85 @@ public class Thread implements Runnable {
     private static class ThreadIdentifiers {
         private static final Unsafe U;
         private static final long NEXT_TID_OFFSET;
+
         static {
             U = Unsafe.getUnsafe();
             NEXT_TID_OFFSET = Thread.getNextThreadIdOffset();
         }
+
         static long next() {
             return U.getAndAddLong(null, NEXT_TID_OFFSET, 1);
         }
     }
 
     /**
-     * Initializes a platform Thread.
+     * 初始化一个平台级的线程。
      *
-     * @param g the Thread group, can be null
-     * @param name the name of the new Thread
-     * @param characteristics thread characteristics
-     * @param task the object whose run() method gets called
-     * @param stackSize the desired stack size for the new thread, or
-     *        zero to indicate that this parameter is to be ignored.
+     * @param g 线程组，可以为 null。
+     * @param name 新线程的名称。
+     * @param characteristics 线程的特性标志。
+     * @param task 当线程启动时调用的对象的 {@code run()} 方法。
+     * @param stackSize 新线程所需的栈大小，如果为零，表示忽略此参数。
      */
     Thread(ThreadGroup g, String name, int characteristics, Runnable task, long stackSize) {
 
+        // 获取当前线程，检查当前线程是否是当前线程对象本身
         Thread parent = currentThread();
-        boolean attached = (parent == this);   // primordial or JNI attached
+        boolean attached = (parent == this);   // 是否是原生线程或JNI附加线程
 
+        // 如果是附加线程（原生线程或JNI附加线程）
         if (attached) {
             if (g == null) {
+                // 如果线程组为空，则抛出异常
                 throw new InternalError("group cannot be null when attaching");
             }
+            // 为线程分配一个新的 FieldHolder，保存线程的组、任务、栈大小、优先级等信息
             this.holder = new FieldHolder(g, task, stackSize, NORM_PRIORITY, false);
         } else {
+            // 对于非附加线程（普通线程），如果线程组为空，则默认使用当前线程的线程组
             if (g == null) {
-                // default to current thread's group
                 g = parent.getThreadGroup();
             }
+            // 计算线程的优先级，使用当前线程和线程组的最大优先级的最小值
             int priority = Math.min(parent.getPriority(), g.getMaxPriority());
+            // 为线程分配一个新的 FieldHolder
             this.holder = new FieldHolder(g, task, stackSize, priority, parent.isDaemon());
         }
 
+        // 如果是附加线程并且VM初始化级别小于1，设置线程ID为原生线程的ID
         if (attached && VM.initLevel() < 1) {
-            this.tid = PRIMORDIAL_TID;  // primordial thread
+            this.tid = PRIMORDIAL_TID;  // 原生线程
         } else {
+            // 否则为线程分配一个新的唯一线程ID
             this.tid = ThreadIdentifiers.next();
         }
 
+        // 如果线程名称为空，则生成一个默认的线程名称
         this.name = (name != null) ? name : genThreadName();
 
-        // thread locals
+        // 处理线程局部变量
         if (!attached) {
+            // 如果没有设置不继承线程局部变量标志，则尝试继承父线程的局部变量
             if ((characteristics & NO_INHERIT_THREAD_LOCALS) == 0) {
                 ThreadLocal.ThreadLocalMap parentMap = parent.inheritableThreadLocals;
+                // 如果父线程有可继承的局部变量，则创建继承的局部变量映射
                 if (parentMap != null && parentMap.size() > 0) {
                     this.inheritableThreadLocals = ThreadLocal.createInheritedMap(parentMap);
                 }
+                // 如果VM已启动，则继承父线程的上下文类加载器
                 if (VM.isBooted()) {
                     this.contextClassLoader = parent.getContextClassLoader();
                 }
             } else if (VM.isBooted()) {
-                // default CCL to the system class loader when not inheriting
+                // 如果不继承线程局部变量，则默认上下文类加载器为系统类加载器
                 this.contextClassLoader = ClassLoader.getSystemClassLoader();
             }
         }
-
-        // special value to indicate this is a newly-created Thread
-        // Note that his must match the declaration in ScopedValue.
+        // 设置特殊值，表示这是一个新创建的线程
+        // 注意：这个值必须与 ScopedValue 中的声明匹配
         this.scopedValueBindings = NEW_THREAD_BINDINGS;
     }
+
 
     /**
      * Initializes a virtual Thread.
@@ -912,15 +939,20 @@ public class Thread implements Runnable {
         sealed interface OfPlatform extends Builder
                 permits ThreadBuilders.PlatformThreadBuilder {
 
-            @Override OfPlatform name(String name);
+            @Override
+            OfPlatform name(String name);
 
             /**
              * @throws IllegalArgumentException {@inheritDoc}
              */
-            @Override OfPlatform name(String prefix, long start);
+            @Override
+            OfPlatform name(String prefix, long start);
 
-            @Override OfPlatform inheritInheritableThreadLocals(boolean inherit);
-            @Override OfPlatform uncaughtExceptionHandler(UncaughtExceptionHandler ueh);
+            @Override
+            OfPlatform inheritInheritableThreadLocals(boolean inherit);
+
+            @Override
+            OfPlatform uncaughtExceptionHandler(UncaughtExceptionHandler ueh);
 
             /**
              * Sets the thread group.
@@ -986,15 +1018,20 @@ public class Thread implements Runnable {
         sealed interface OfVirtual extends Builder
                 permits ThreadBuilders.VirtualThreadBuilder {
 
-            @Override OfVirtual name(String name);
+            @Override
+            OfVirtual name(String name);
 
             /**
              * @throws IllegalArgumentException {@inheritDoc}
              */
-            @Override OfVirtual name(String prefix, long start);
+            @Override
+            OfVirtual name(String prefix, long start);
 
-            @Override OfVirtual inheritInheritableThreadLocals(boolean inherit);
-            @Override OfVirtual uncaughtExceptionHandler(UncaughtExceptionHandler ueh);
+            @Override
+            OfVirtual inheritInheritableThreadLocals(boolean inherit);
+
+            @Override
+            OfVirtual uncaughtExceptionHandler(UncaughtExceptionHandler ueh);
         }
     }
 
@@ -1002,7 +1039,7 @@ public class Thread implements Runnable {
      * Throws CloneNotSupportedException as a Thread can not be meaningfully
      * cloned. Construct a new Thread instead.
      *
-     * @throws  CloneNotSupportedException
+     * @throws CloneNotSupportedException
      *          always
      */
     @Override
@@ -1018,6 +1055,7 @@ public class Thread implements Runnable {
         private static final Unsafe U;
         private static final Object NEXT_BASE;
         private static final long NEXT_OFFSET;
+
         static {
             U = Unsafe.getUnsafe();
             try {
@@ -1028,7 +1066,9 @@ public class Thread implements Runnable {
                 throw new ExceptionInInitializerError(e);
             }
         }
+
         private static volatile int next;
+
         static int next() {
             return U.getAndAddInt(NEXT_BASE, NEXT_OFFSET, 1);
         }
@@ -1053,7 +1093,7 @@ public class Thread implements Runnable {
 
     /**
      * Initializes a new platform {@code Thread}. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup, Runnable, String) Thread}
      * {@code (null, null, gname)}, where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
@@ -1069,7 +1109,7 @@ public class Thread implements Runnable {
 
     /**
      * Initializes a new platform {@code Thread}. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup, Runnable, String) Thread}
      * {@code (null, task, gname)}, where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
@@ -1090,7 +1130,7 @@ public class Thread implements Runnable {
 
     /**
      * Initializes a new platform {@code Thread}. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup, Runnable, String) Thread}
      * {@code (group, task, gname)}, where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
@@ -1115,7 +1155,7 @@ public class Thread implements Runnable {
 
     /**
      * Initializes a new platform {@code Thread}. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup, Runnable, String) Thread}
      * {@code (null, null, name)}.
      *
      * <p> This constructor is only useful when extending {@code Thread} to
@@ -1132,7 +1172,7 @@ public class Thread implements Runnable {
 
     /**
      * Initializes a new platform {@code Thread}. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup, Runnable, String) Thread}
      * {@code (group, null, name)}.
      *
      * <p> This constructor is only useful when extending {@code Thread} to
@@ -1153,7 +1193,7 @@ public class Thread implements Runnable {
 
     /**
      * Initializes a new platform {@code Thread}. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup, Runnable, String) Thread}
      * {@code (null, task, name)}.
      *
      * <p> For a non-null task and name, invoking this constructor directly is
@@ -1216,7 +1256,7 @@ public class Thread implements Runnable {
      * the specified <i>stack size</i>.
      *
      * <p>This constructor is identical to {@link
-     * #Thread(ThreadGroup,Runnable,String)} with the exception of the fact
+     * #Thread(ThreadGroup, Runnable, String)} with the exception of the fact
      * that it allows the thread stack size to be specified.  The stack size
      * is the approximate number of bytes of address space that the virtual
      * machine is to allocate for this thread's stack.  <b>The effect of the
@@ -1292,7 +1332,7 @@ public class Thread implements Runnable {
      * if {@code inheritThreadLocals} is {@code true}.
      *
      * <p> This constructor is identical to {@link
-     * #Thread(ThreadGroup,Runnable,String,long)} with the added ability to
+     * #Thread(ThreadGroup, Runnable, String, long)} with the added ability to
      * suppress, or not, the inheriting of initial values for inheritable
      * thread-local variables from the constructing thread. This allows for
      * finer grain control over inheritable thread-locals. Care must be taken
@@ -1362,11 +1402,8 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Returns {@code true} if this thread is a virtual thread. A virtual thread
-     * is scheduled by the Java virtual machine rather than the operating system.
-     *
-     * @return {@code true} if this thread is a virtual thread
-     *
+     * 如果该线程是虚拟线程，则返回  true。虚拟线程由 Java 虚拟机调度，而非操作系统。
+     * @return 如果该线程是虚拟线程，则返回 true
      * @since 21
      */
     public final boolean isVirtual() {
@@ -1374,19 +1411,18 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Schedules this thread to begin execution. The thread will execute
-     * independently of the current thread.
-     *
-     * <p> A thread can be started at most once. In particular, a thread can not
-     * be restarted after it has terminated.
-     *
-     * @throws IllegalThreadStateException if the thread was already started
+     * 调度该线程开始执行。该线程将独立于当前线程执行。
+     * <p> 一个线程最多只能启动一次。特别地，线程在终止后不能重新启动。
+     * @throws IllegalThreadStateException 如果线程已经启动过
      */
     public void start() {
+        // 锁定当前线程对象，确保多线程环境下的线程安全
         synchronized (this) {
-            // zero status corresponds to state "NEW".
+            // 线程状态为零对应 "NEW" 状态，即线程尚未启动
             if (holder.threadStatus != 0)
+                // 如果线程状态不是零，表示线程已经启动过，抛出 IllegalThreadStateException 异常
                 throw new IllegalThreadStateException();
+            // 调用底层方法进行线程的启动
             start0();
         }
     }
@@ -1503,7 +1539,7 @@ public class Thread implements Runnable {
     /**
      * Throws {@code UnsupportedOperationException}.
      *
-     * @throws  UnsupportedOperationException always
+     * @throws UnsupportedOperationException always
      *
      * @deprecated This method was originally specified to "stop" a victim
      *       thread by causing the victim thread to throw a {@link ThreadDeath}.
@@ -1525,7 +1561,7 @@ public class Thread implements Runnable {
      *       <a href="{@docRoot}/java.base/java/lang/doc-files/threadPrimitiveDeprecation.html">Why
      *       is Thread.stop deprecated and the ability to stop a thread removed?</a>.
      */
-    @Deprecated(since="1.2", forRemoval=true)
+    @Deprecated(since = "1.2", forRemoval = true)
     public final void stop() {
         throw new UnsupportedOperationException();
     }
@@ -1583,15 +1619,10 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Tests whether the current thread has been interrupted.  The
-     * <i>interrupted status</i> of the thread is cleared by this method.  In
-     * other words, if this method were to be called twice in succession, the
-     * second call would return false (unless the current thread were
-     * interrupted again, after the first call had cleared its interrupted
-     * status and before the second call had examined it).
-     *
-     * @return  {@code true} if the current thread has been interrupted;
-     *          {@code false} otherwise.
+     * 测试当前线程是否已被中断。此方法会清除线程的<i>中断状态</i>。换句话说，如果此方法连续调用两次，
+     * 第二次调用将返回 false（除非在第一次调用清除中断状态后，当前线程再次被中断，并且第二次调用
+     * 在检查之前发生）。
+     * @return  {@code true} 如果当前线程已被中断；否则返回 {@code false}。
      * @see #isInterrupted()
      */
     public static boolean interrupted() {
@@ -1628,15 +1659,16 @@ public class Thread implements Runnable {
 
     boolean getAndClearInterrupt() {
         boolean oldValue = interrupted;
-        // We may have been interrupted the moment after we read the field,
-        // so only clear the field if we saw that it was set and will return
-        // true; otherwise we could lose an interrupt.
         if (oldValue) {
+            // 3. 清除中断标志，将其重置为 false
             interrupted = false;
+            // 4. 调用清除中断事件的相关方法
             clearInterruptEvent();
         }
+        // 5. 返回旧的中断状态值
         return oldValue;
     }
+
 
     /**
      * Tests if this thread is alive. A thread is alive if it has
@@ -1668,7 +1700,7 @@ public class Thread implements Runnable {
      * and {@code newPriority} is ignored.
      *
      * @param newPriority the new thread priority
-     * @throws  IllegalArgumentException if the priority is not in the
+     * @throws IllegalArgumentException if the priority is not in the
      *          range {@code MIN_PRIORITY} to {@code MAX_PRIORITY}.
      * @see #setPriority(int)
      * @see ThreadGroup#getMaxPriority()
@@ -1698,7 +1730,7 @@ public class Thread implements Runnable {
      *
      * <p> The priority of a virtual thread is always {@link Thread#NORM_PRIORITY}.
      *
-     * @return  this thread's priority.
+     * @return this thread's priority.
      * @see     #setPriority
      */
     public final int getPriority() {
@@ -1738,7 +1770,7 @@ public class Thread implements Runnable {
     /**
      * Returns this thread's name.
      *
-     * @return  this thread's name.
+     * @return this thread's name.
      * @see     #setName(String)
      */
     public final String getName() {
@@ -1746,22 +1778,20 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Returns the thread's thread group or {@code null} if the thread has
-     * terminated.
-     *
-     * <p> The thread group returned for a virtual thread is the special
-     * <a href="ThreadGroup.html#virtualthreadgroup"><em>ThreadGroup for
-     * virtual threads</em></a>.
-     *
-     * @return  this thread's thread group or {@code null}
+     * 返回线程的线程组，如果线程已经终止，则返回 null。
+     * 对于虚拟线程，返回的是特殊的 虚拟线程的线程组。
+     * @return 该线程的线程组，如果线程已终止则返回 {null}。
      */
     public final ThreadGroup getThreadGroup() {
+        // 如果线程已经终止，返回 null
         if (isTerminated()) {
             return null;
         } else {
+            // 如果是虚拟线程，返回虚拟线程的线程组；否则返回线程的实际线程组
             return isVirtual() ? virtualThreadGroup() : holder.group;
         }
     }
+
 
     /**
      * Returns an estimate of the number of {@linkplain #isAlive() live}
@@ -1774,7 +1804,7 @@ public class Thread implements Runnable {
      * system threads. This method is intended primarily for debugging
      * and monitoring purposes.
      *
-     * @return  an estimate of the number of live platform threads in the
+     * @return an estimate of the number of live platform threads in the
      *          current thread's thread group and in any other thread group
      *          that has the current thread's thread group as an ancestor
      */
@@ -1803,7 +1833,7 @@ public class Thread implements Runnable {
      * @param  tarray
      *         an array into which to put the list of threads
      *
-     * @return  the number of threads put into the array
+     * @return the number of threads put into the array
      */
     public static int enumerate(Thread[] tarray) {
         return currentThread().getThreadGroup().enumerate(tarray);
@@ -1825,10 +1855,10 @@ public class Thread implements Runnable {
      * @param  millis
      *         the time to wait in milliseconds
      *
-     * @throws  IllegalArgumentException
+     * @throws IllegalArgumentException
      *          if the value of {@code millis} is negative
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
@@ -1853,7 +1883,7 @@ public class Thread implements Runnable {
                     do {
                         wait(delay);
                     } while (isAlive() && (delay = millis -
-                             NANOSECONDS.toMillis(System.nanoTime() - startTime)) > 0);
+                            NANOSECONDS.toMillis(System.nanoTime() - startTime)) > 0);
                 }
             } else {
                 while (isAlive()) {
@@ -1883,11 +1913,11 @@ public class Thread implements Runnable {
      * @param  nanos
      *         {@code 0-999999} additional nanoseconds to wait
      *
-     * @throws  IllegalArgumentException
+     * @throws IllegalArgumentException
      *          if the value of {@code millis} is negative, or the value
      *          of {@code nanos} is not in the range {@code 0-999999}
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
@@ -1927,7 +1957,7 @@ public class Thread implements Runnable {
      * {@linkplain #join(long) join}{@code (0)}
      * </blockquote>
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
@@ -1949,12 +1979,12 @@ public class Thread implements Runnable {
      * @return  {@code true} if the thread has terminated, {@code false} if the
      *          thread has not terminated
      *
-     * @throws  InterruptedException
+     * @throws InterruptedException
      *          if the current thread is interrupted while waiting.
      *          The <i>interrupted status</i> of the current thread is cleared
      *          when this exception is thrown.
      *
-     * @throws  IllegalThreadStateException
+     * @throws IllegalThreadStateException
      *          if this thread has not been started.
      *
      * @since 19
@@ -2005,9 +2035,9 @@ public class Thread implements Runnable {
      * @param  on
      *         if {@code true}, marks this thread as a daemon thread
      *
-     * @throws  IllegalArgumentException
+     * @throws IllegalArgumentException
      *          if this is a virtual thread and {@code on} is false
-     * @throws  IllegalThreadStateException
+     * @throws IllegalThreadStateException
      *          if this thread is {@linkplain #isAlive alive}
      */
     public final void setDaemon(boolean on) {
@@ -2048,8 +2078,9 @@ public class Thread implements Runnable {
      * which is no longer supported. There is no replacement for the Security
      * Manager or this method.
      */
-    @Deprecated(since="17", forRemoval=true)
-    public final void checkAccess() { }
+    @Deprecated(since = "17", forRemoval = true)
+    public final void checkAccess() {
+    }
 
     /**
      * Returns a string representation of this thread. The string representation
@@ -2057,7 +2088,7 @@ public class Thread implements Runnable {
      * name. The default implementation for platform threads includes the thread's
      * identifier, name, priority, and the name of the thread group.
      *
-     * @return  a string representation of this thread.
+     * @return a string representation of this thread.
      */
     public String toString() {
         StringBuilder sb = new StringBuilder("Thread[#");
@@ -2084,7 +2115,7 @@ public class Thread implements Runnable {
      * <p> The context {@code ClassLoader} of the primordial thread is typically
      * set to the class loader used to load the application.
      *
-     * @return  the context {@code ClassLoader} for this thread, or {@code null}
+     * @return the context {@code ClassLoader} for this thread, or {@code null}
      *          indicating the system class loader (or, failing that, the
      *          bootstrap class loader)
      *
@@ -2128,7 +2159,7 @@ public class Thread implements Runnable {
     public static native boolean holdsLock(Object obj);
 
     private static final StackTraceElement[] EMPTY_STACK_TRACE
-        = new StackTraceElement[0];
+            = new StackTraceElement[0];
 
     /**
      * Returns an array of stack trace elements representing the stack dump
@@ -2236,6 +2267,7 @@ public class Thread implements Runnable {
     }
 
     private static native StackTraceElement[][] dumpThreads(Thread[] threads);
+
     private static native Thread[] getThreads();
 
     /**
@@ -2250,7 +2282,7 @@ public class Thread implements Runnable {
      *
      * @since 1.5
      */
-    @Deprecated(since="19")
+    @Deprecated(since = "19")
     public long getId() {
         return threadId();
     }
@@ -2298,7 +2330,7 @@ public class Thread implements Runnable {
      * These states are virtual machine states which do not reflect
      * any operating system thread states.
      *
-     * @since   1.5
+     * @since 1.5
      * @see #getState
      */
     public enum State {
@@ -2360,8 +2392,8 @@ public class Thread implements Runnable {
         TIMED_WAITING,
 
         /**
-         * Thread state for a terminated thread.
-         * The thread has completed execution.
+         * 终止线程的线程状态。
+         * 线程已经完成执行。
          */
         TERMINATED;
     }
@@ -2387,9 +2419,7 @@ public class Thread implements Runnable {
         return jdk.internal.misc.VM.toThreadState(holder.threadStatus);
     }
 
-    /**
-     * Returns true if the thread has terminated.
-     */
+    // 如果线程已经终止返回true
     boolean isTerminated() {
         return threadState() == State.TERMINATED;
     }
@@ -2477,7 +2507,7 @@ public class Thread implements Runnable {
      * @see #setDefaultUncaughtExceptionHandler
      * @return the default uncaught exception handler for all threads
      */
-    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler(){
+    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() {
         return defaultUncaughtExceptionHandler;
     }
 
@@ -2530,20 +2560,24 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Holder class for constants.
+     * 用于常量的持有者类。
      */
     private static class Constants {
-        // Thread group for virtual threads.
+        // 用于虚拟线程的线程组。
         static final ThreadGroup VTHREAD_GROUP;
 
         static {
+            // 获取当前线程所属的线程组
             ThreadGroup root = Thread.currentCarrierThread().getThreadGroup();
+            // 遍历线程组的父级，直到找到根线程组
             for (ThreadGroup p; (p = root.getParent()) != null; ) {
                 root = p;
             }
+            // 创建一个新的线程组，名称为 "VirtualThreads"，优先级为 MAX_PRIORITY，且非守护线程
             VTHREAD_GROUP = new ThreadGroup(root, "VirtualThreads", MAX_PRIORITY, false);
         }
     }
+
 
     /**
      * Returns the special ThreadGroup for virtual threads.
@@ -2567,10 +2601,13 @@ public class Thread implements Runnable {
     int threadLocalRandomSecondarySeed;
 
     /** The thread container that this thread is in */
-    private @Stable ThreadContainer container;
+    private @Stable
+    ThreadContainer container;
+
     ThreadContainer threadContainer() {
         return container;
     }
+
     void setThreadContainer(ThreadContainer container) {
         // assert this.container == null;
         this.container = container;
@@ -2578,17 +2615,22 @@ public class Thread implements Runnable {
 
     /** The top of this stack of stackable scopes owned by this thread */
     private volatile StackableScope headStackableScopes;
+
     StackableScope headStackableScopes() {
         return headStackableScopes;
     }
+
     static void setHeadStackableScope(StackableScope scope) {
         currentThread().headStackableScopes = scope;
     }
 
     /* Some private helper methods */
     private native void setPriority0(int newPriority);
+
     private native void interrupt0();
+
     private static native void clearInterruptEvent();
+
     private native void setNativeName(String name);
 
     // The address of the next thread identifier, see ThreadIdentifiers.
