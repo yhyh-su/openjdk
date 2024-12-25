@@ -432,23 +432,6 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
         return size == 0;
     }
 
-    /**
-     * Returns the value to which the specified key is mapped,
-     * or {@code null} if this map contains no mapping for the key.
-     *
-     * <p>More formally, if this map contains a mapping from a key
-     * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
-     * key.equals(k))}, then this method returns {@code v}; otherwise
-     * it returns {@code null}.  (There can be at most one such mapping.)
-     *
-     * <p>A return value of {@code null} does not <i>necessarily</i>
-     * indicate that the map contains no mapping for the key; it's also
-     * possible that the map explicitly maps the key to {@code null}.
-     * The {@link #containsKey containsKey} operation may be used to
-     * distinguish these two cases.
-     *
-     * @see #put(Object, Object)
-     */
     public V get(Object key) {
         Node<K, V> e;
         return (e = getNode(key)) == null ? null : e.value;
@@ -465,17 +448,14 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
         Node<K, V> first, e;
         int n, hash;
         K k;
-        if ((tab = table) != null && (n = tab.length) > 0 &&
-                (first = tab[(n - 1) & (hash = hash(key))]) != null) {
-            if (first.hash == hash && // always check first node
-                    ((k = first.key) == key || (key != null && key.equals(k))))
+        if ((tab = table) != null && (n = tab.length) > 0 && (first = tab[(n - 1) & (hash = hash(key))]) != null) {
+            if (first.hash == hash && ((k = first.key) == key || (key != null && key.equals(k))))
                 return first;
             if ((e = first.next) != null) {
                 if (first instanceof TreeNode)
                     return ((TreeNode<K, V>) first).getTreeNode(hash, key);
                 do {
-                    if (e.hash == hash &&
-                            ((k = e.key) == key || (key != null && key.equals(k))))
+                    if (e.hash == hash && ((k = e.key) == key || (key != null && key.equals(k))))
                         return e;
                 } while ((e = e.next) != null);
             }
@@ -1937,9 +1917,7 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
             super(hash, key, val, next);
         }
 
-        /**
-         * Returns root of tree containing this node.
-         */
+        // 返回包含这个节点的树的根结点
         final TreeNode<K, V> root() {
             for (TreeNode<K, V> r = this, p; ; ) {
                 if ((p = r.parent) == null)
@@ -1993,37 +1971,55 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Clone
 
 
         /**
-         * Finds the node starting at root p with the given hash and key.
-         * The kc argument caches comparableClassFor(key) upon first use
-         * comparing keys.
+         * 从当前节点（root p）开始，查找具有给定哈希值和键的节点。
+         * 参数kc用于缓存比较键值时使用的类，第一次比较键时将其缓存。
+         *
+         * @param h 要查找的键的哈希值。
+         * @param k 要查找的键。
+         * @param kc 缓存的Comparable类，若未缓存则为null。
+         * @return 返回匹配的TreeNode，如果找不到则返回null。
          */
         final TreeNode<K, V> find(int h, Object k, Class<?> kc) {
+            // 从当前节点开始查找
             TreeNode<K, V> p = this;
+            // 循环遍历树，直到找到匹配节点或遍历到树的末尾
             do {
                 int ph, dir;
                 K pk;
+                // 当前节点的左子节点和右子节点
                 TreeNode<K, V> pl = p.left, pr = p.right, q;
-                if ((ph = p.hash) > h)
+
+                // 获取当前节点的哈希值并与目标哈希值比较
+                if ((ph = p.hash) > h) {
+                    // 如果目标哈希值小于当前节点的哈希值，则向当前节点的左子树移动
                     p = pl;
-                else if (ph < h)
+                } else if (ph < h) {
+                    // 如果目标哈希值大于当前节点的哈希值，则向当前节点的右子树移动
                     p = pr;
-                else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+                } else if ((pk = p.key) == k || (k != null && k.equals(pk))) {
+                    // 如果哈希值相等且键值相等，则找到目标节点，返回当前节点
                     return p;
-                else if (pl == null)
+                } else if (pl == null) {
+                    // 如果左子节点为空，则只能向右子树移动
                     p = pr;
-                else if (pr == null)
+                } else if (pr == null) {
+                    // 如果右子节点为空，则只能向左子树移动
                     p = pl;
-                else if ((kc != null ||
-                        (kc = comparableClassFor(k)) != null) &&
-                        (dir = compareComparables(kc, k, pk)) != 0)
+                } else if ((kc != null || (kc = comparableClassFor(k)) != null) && (dir = compareComparables(kc, k, pk)) != 0) {
+                    // 如果kc不为空或者首次计算得到kc，并且使用该类比较键值
+                    // 如果比较结果不为0，表示键值不相等，决定向左或右子树移动
                     p = (dir < 0) ? pl : pr;
-                else if ((q = pr.find(h, k, kc)) != null)
+                } else if ((q = pr.find(h, k, kc)) != null) {
+                    // 如果右子树中的节点找到匹配的键，返回找到的节点
                     return q;
-                else
+                } else {
+                    // 如果右子树没有找到，则向左子树移动
                     p = pl;
-            } while (p != null);
-            return null;
+                }
+            } while (p != null); // 如果p为null，表示未找到节点，返回null
+            return null; // 如果未找到匹配的节点，返回null
         }
+
 
         /**
          * Calls find for root node.

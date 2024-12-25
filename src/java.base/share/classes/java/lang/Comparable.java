@@ -24,119 +24,94 @@
  */
 
 package java.lang;
+
 import java.util.*;
 
 /**
- * This interface imposes a total ordering on the objects of each class that
- * implements it.  This ordering is referred to as the class's <i>natural
- * ordering</i>, and the class's {@code compareTo} method is referred to as
- * its <i>natural comparison method</i>.<p>
+ * 该接口为实现它的每个类的对象施加了一个完全的排序规则。
+ * 这种排序规则被称为类的<i>自然排序</i>，类的{@code compareTo}方法
+ * 被称为该类的<i>自然比较方法</i>。<p>
  *
- * Lists (and arrays) of objects that implement this interface can be sorted
- * automatically by {@link Collections#sort(List) Collections.sort} (and
- * {@link Arrays#sort(Object[]) Arrays.sort}).  Objects that implement this
- * interface can be used as keys in a {@linkplain SortedMap sorted map} or as
- * elements in a {@linkplain SortedSet sorted set}, without the need to
- * specify a {@linkplain Comparator comparator}.<p>
+ * 实现此接口的对象的列表（和数组）可以通过 {@link Collections#sort(List) Collections.sort}
+ * （和 {@link Arrays#sort(Object[]) Arrays.sort}）自动排序。
+ * 实现此接口的对象可以作为 {@linkplain SortedMap 排序映射} 的键，
+ * 或作为 {@linkplain SortedSet 排序集合} 的元素，无需指定 {@linkplain Comparator 比较器}。<p>
  *
- * The natural ordering for a class {@code C} is said to be <i>consistent
- * with equals</i> if and only if {@code e1.compareTo(e2) == 0} has
- * the same boolean value as {@code e1.equals(e2)} for every
- * {@code e1} and {@code e2} of class {@code C}.  Note that {@code null}
- * is not an instance of any class, and {@code e.compareTo(null)} should
- * throw a {@code NullPointerException} even though {@code e.equals(null)}
- * returns {@code false}.<p>
+ * 对于类 {@code C}，自然排序被称为与equals方法一致，前提是
+ * {@code e1.compareTo(e2) == 0} 和 {@code e1.equals(e2)} 对于每个
+ * {@code e1} 和 {@code e2} 都有相同的布尔值。请注意，{@code null}
+ * 不是任何类的实例，{@code e.compareTo(null)} 应该抛出
+ * {@code NullPointerException}，即使 {@code e.equals(null)}
+ * 返回 {@code false}。<p>
  *
- * It is strongly recommended (though not required) that natural orderings be
- * consistent with equals.  This is so because sorted sets (and sorted maps)
- * without explicit comparators behave "strangely" when they are used with
- * elements (or keys) whose natural ordering is inconsistent with equals.  In
- * particular, such a sorted set (or sorted map) violates the general contract
- * for set (or map), which is defined in terms of the {@code equals}
- * method.<p>
+ * 强烈建议（尽管不是强制的）自然排序与equals一致。
+ * 这是因为没有显式比较器的排序集合（和排序映射）在与
+ * 自然排序与equals不一致的元素（或键）一起使用时会表现得“奇怪”。
+ * 特别是，当向没有显式比较器的排序集合（或排序映射）中添加
+ * 两个键 {@code a} 和 {@code b}，其中 {@code (!a.equals(b) && a.compareTo(b) == 0)} 时，
+ * 第二次 {@code add} 操作将返回false（排序集合的大小不会增加），
+ * 因为从排序集合的角度看 {@code a} 和 {@code b} 是等价的。<p>
  *
- * For example, if one adds two keys {@code a} and {@code b} such that
- * {@code (!a.equals(b) && a.compareTo(b) == 0)} to a sorted
- * set that does not use an explicit comparator, the second {@code add}
- * operation returns false (and the size of the sorted set does not increase)
- * because {@code a} and {@code b} are equivalent from the sorted set's
- * perspective.<p>
+ * 几乎所有实现 {@code Comparable} 的 Java 核心类都有与 equals 一致的自然排序。
+ * 其中一个例外是 {@link java.math.BigDecimal}，它的 {@linkplain
+ * java.math.BigDecimal#compareTo 自然排序} 认为具有相同数值但不同表示的
+ * {@code BigDecimal} 对象相等（如 4.0 和 4.00）。对于 {@link
+ * java.math.BigDecimal#equals BigDecimal.equals()} 来说，只有当
+ * 两个 {@code BigDecimal} 对象的表示和数值都相同时，它们才会相等。<p>
  *
- * Virtually all Java core classes that implement {@code Comparable}
- * have natural orderings that are consistent with equals.  One
- * exception is {@link java.math.BigDecimal}, whose {@linkplain
- * java.math.BigDecimal#compareTo natural ordering} equates {@code
- * BigDecimal} objects with equal numerical values and different
- * representations (such as 4.0 and 4.00). For {@link
- * java.math.BigDecimal#equals BigDecimal.equals()} to return true,
- * the representation and numerical value of the two {@code
- * BigDecimal} objects must be the same.<p>
- *
- * For the mathematically inclined, the <i>relation</i> that defines
- * the natural ordering on a given class C is:<pre>{@code
- *       {(x, y) such that x.compareTo(y) <= 0}.
- * }</pre> The <i>quotient</i> for this total order is: <pre>{@code
- *       {(x, y) such that x.compareTo(y) == 0}.
+ * 对于数学爱好者来说，定义自然排序的<i>关系</i>是：<pre>{@code
+ *       {(x, y) 使得 x.compareTo(y) <= 0}.
+ * }</pre> 此<i>商集</i>是：<pre>{@code
+ *       {(x, y) 使得 x.compareTo(y) == 0}.
  * }</pre>
  *
- * It follows immediately from the contract for {@code compareTo} that the
- * quotient is an <i>equivalence relation</i> on {@code C}, and that the
- * natural ordering is a <i>total order</i> on {@code C}.  When we say that a
- * class's natural ordering is <i>consistent with equals</i>, we mean that the
- * quotient for the natural ordering is the equivalence relation defined by
- * the class's {@link Object#equals(Object) equals(Object)} method:<pre>
- *     {(x, y) such that x.equals(y)}. </pre><p>
+ * 根据 {@code compareTo} 方法的契约，自然排序的商集是一个<i>等价关系</i>，
+ * 自然排序是 {@code C} 上的一个<i>完全顺序</i>。当我们说一个类的自然排序
+ * 与equals一致时，意味着自然排序的商集与该类的 {@link Object#equals(Object) equals} 方法定义的
+ * 等价关系是相同的：<pre>
+ *     {(x, y) 使得 x.equals(y)}. </pre><p>
  *
- * In other words, when a class's natural ordering is consistent with
- * equals, the equivalence classes defined by the equivalence relation
- * of the {@code equals} method and the equivalence classes defined by
- * the quotient of the {@code compareTo} method are the same.
+ * 换句话说，当一个类的自然排序与equals一致时，等价关系类由 {@code equals} 方法定义，
+ * 与 {@code compareTo} 方法的商集定义的等价关系类是相同的。
  *
- * <p>This interface is a member of the
- * <a href="{@docRoot}/java.base/java/util/package-summary.html#CollectionsFramework">
- * Java Collections Framework</a>.
+ * <p>此接口是<a href="{@docRoot}/java.base/java/util/package-summary.html#CollectionsFramework">
+ * Java 集合框架</a>的一部分。
  *
- * @param <T> the type of objects that this object may be compared to
+ * @param <T> 该对象可能与之比较的对象的类型
  *
- * @author  Josh Bloch
+ * @author Josh Bloch
  * @see java.util.Comparator
  * @since 1.2
  */
 public interface Comparable<T> {
+
     /**
-     * Compares this object with the specified object for order.  Returns a
-     * negative integer, zero, or a positive integer as this object is less
-     * than, equal to, or greater than the specified object.
+     * 比较此对象与指定对象的顺序。根据该对象是否小于、等于或大于 指定对象，返回一个负整数、零或正整数。
      *
-     * <p>The implementor must ensure {@link Integer#signum
-     * signum}{@code (x.compareTo(y)) == -signum(y.compareTo(x))} for
-     * all {@code x} and {@code y}.  (This implies that {@code
-     * x.compareTo(y)} must throw an exception if and only if {@code
-     * y.compareTo(x)} throws an exception.)
+     * <p>实现者必须确保 {@link Integer#signum
+     * signum}{@code (x.compareTo(y)) == -signum(y.compareTo(x))} 对于所有的
+     * {@code x} 和 {@code y} 都成立。 （这意味着 {@code
+     * x.compareTo(y)} 必须抛出异常当且仅当 {@code y.compareTo(x)} 抛出异常时。）
      *
-     * <p>The implementor must also ensure that the relation is transitive:
-     * {@code (x.compareTo(y) > 0 && y.compareTo(z) > 0)} implies
-     * {@code x.compareTo(z) > 0}.
+     * <p>实现者还必须确保关系是传递的：
+     * {@code (x.compareTo(y) > 0 && y.compareTo(z) > 0)} 则
+     * {@code x.compareTo(z) > 0}。
      *
-     * <p>Finally, the implementor must ensure that {@code
-     * x.compareTo(y)==0} implies that {@code signum(x.compareTo(z))
-     * == signum(y.compareTo(z))}, for all {@code z}.
+     * <p>最后，实施者必须确保 {@code
+     * x.compareTo(y)==0} 表示 {@code signum(x.compareTo(z))
+     * == signum(y.compareTo(z))} 对于所有的 {@code z}。
      *
      * @apiNote
-     * It is strongly recommended, but <i>not</i> strictly required that
-     * {@code (x.compareTo(y)==0) == (x.equals(y))}.  Generally speaking, any
-     * class that implements the {@code Comparable} interface and violates
-     * this condition should clearly indicate this fact.  The recommended
-     * language is "Note: this class has a natural ordering that is
-     * inconsistent with equals."
+     * 强烈建议，但不是严格要求 {@code (x.compareTo(y)==0) == (x.equals(y))}。
+     * 通常，任何实现了 {@code Comparable} 接口且违反此条件的类应明确指出此事实。
+     * 推荐的语言是：“注意：此类具有与 equals 不一致的自然排序。”
      *
-     * @param   o the object to be compared.
-     * @return  a negative integer, zero, or a positive integer as this object
-     *          is less than, equal to, or greater than the specified object.
+     * @param   o 要比较的对象。
+     * @return 一个负整数、零或正整数，表示该对象小于、等于或大于指定对象。
      *
-     * @throws NullPointerException if the specified object is null
-     * @throws ClassCastException if the specified object's type prevents it
-     *         from being compared to this object.
+     * @throws NullPointerException 如果指定的对象为 null
+     * @throws ClassCastException 如果指定对象的类型无法与此对象进行比较。
      */
     public int compareTo(T o);
 }
+
