@@ -154,28 +154,26 @@ public final class Objects {
     }
 
     /**
-     * {@return a string equivalent to the string returned by {@code
-     * Object.toString} if that method and {@code hashCode} are not
-     * overridden}
-     *
-     * @implNote
-     * This method constructs a string for an object without calling
-     * any overridable methods of the object.
-     *
+     * 如果 `Object.toString` 方法和 `hashCode` 方法没有被重写，
+     * 返回与 `Object.toString` 方法返回的字符串等价的字符串。
+     * 这个方法为一个对象构造一个字符串表示，而不调用对象的任何可重写的方法。
      * @implSpec
-     * The method returns a string equivalent to:<br>
+     * 该方法返回一个等价的字符串，格式为：
      * {@code o.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(o))}
-     *
      * @param o an object
+     *           需要生成身份字符串的对象。
      * @throws NullPointerException if the argument is null
+     *           如果参数为 null，则抛出 NullPointerException 异常。
      * @see Object#toString
      * @see System#identityHashCode(Object)
      * @since 19
      */
     public static String toIdentityString(Object o) {
         requireNonNull(o);
+        // 返回对象的类名与其身份哈希码的十六进制表示组合的字符串。
         return o.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(o));
     }
+
 
     /**
      * {@return 0 if the arguments are identical and {@code

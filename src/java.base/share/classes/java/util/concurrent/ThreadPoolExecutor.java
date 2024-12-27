@@ -500,7 +500,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private final Condition termination = mainLock.newCondition();
 
     /**
-     * The thread container for the worker threads.
+     * 工作线程的线程容器。
      */
     private final SharedThreadContainer container;
 
@@ -880,19 +880,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             // 1. 线程池不再接收新任务，且不处理已加入的任务
             // 2. firstTask 不为 null（表示任务直接由线程池执行）
             // 3. 工作队列为空（即当前无待处理任务）
-            if (runStateAtLeast(c, SHUTDOWN)
-                    && (runStateAtLeast(c, STOP) // 状态为 STOP（已停止）
-                    || firstTask != null // firstTask 不为 null
-                    || workQueue.isEmpty())) { // 或者工作队列为空
+            if (runStateAtLeast(c, SHUTDOWN) && (runStateAtLeast(c, STOP) || firstTask != null || workQueue.isEmpty())) { // 或者工作队列为空
                 return false; // 返回 false，表示无法添加新工作线程
             }
 
             // 内循环尝试增加 workerCount
             for (; ; ) {
                 // 如果当前线程池中 workerCount 数量已经达到了 core 或 maximum 池大小，则返回 false
-                if (workerCountOf(c)
-                        >= ((core ? corePoolSize : maximumPoolSize) & COUNT_MASK)) {
-                    return false; // 无法增加更多工作线程，返回 false
+                if (workerCountOf(c) >= ((core ? corePoolSize : maximumPoolSize) & COUNT_MASK)) {
+                    return false;
                 }
 
                 // 尝试原子增加工作线程数，如果成功则跳出 retry 循环
@@ -926,17 +922,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     int c = ctl.get();
 
                     // 如果线程池仍然处于运行状态或（线程池状态小于 STOP 且 firstTask 为 null）
-                    if (isRunning(c)
-                            || (runStateLessThan(c, STOP) && firstTask == null)) {
+                    if (isRunning(c) || (runStateLessThan(c, STOP) && firstTask == null)) {
                         // 如果线程的状态是新建的状态，才允许加入线程池
                         if (t.getState() != Thread.State.NEW) {
                             throw new IllegalThreadStateException(); // 如果线程不是新建状态，则抛出异常
                         }
-
                         // 添加 worker 到工作线程集合
                         workers.add(w);
                         workerAdded = true;  // 标记 worker 已添加
-
                         // 更新最大池大小
                         int s = workers.size();
                         if (s > largestPoolSize) {
@@ -946,7 +939,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 } finally {
                     mainLock.unlock(); // 解锁
                 }
-
                 // 如果 worker 成功添加，则启动线程
                 if (workerAdded) {
                     container.start(t); // 启动线程
@@ -1031,59 +1023,53 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Performs blocking or timed wait for a task, depending on
-     * current configuration settings, or returns null if this worker
-     * must exit because of any of:
-     * 1. There are more than maximumPoolSize workers (due to
-     * a call to setMaximumPoolSize).
-     * 2. The pool is stopped.
-     * 3. The pool is shutdown and the queue is empty.
-     * 4. This worker timed out waiting for a task, and timed-out
-     * workers are subject to termination (that is,
-     * {@code allowCoreThreadTimeOut || workerCount > corePoolSize})
-     * both before and after the timed wait, and if the queue is
-     * non-empty, this worker is not the last thread in the pool.
      *
-     * @return task, or null if the worker must exit, in which case
-     * workerCount is decremented
+     * 执行阻塞或定时等待任务，具体取决于当前配置设置，或者在以下任一情况下返回 null，表示该工作线程必须退出：
+     *
+     * 1. 当前工作线程数量超过最大池大小（由调用 setMaximumPoolSize 设置）。
+     * 2. 池被停止。
+     * 3. 池被关闭并且队列为空。
+     * 4. 该工作线程在等待任务时超时，超时的工作线程可能会被终止（即，满足以下任意条件：
+     *    - `allowCoreThreadTimeOut` 为 true，或
+     *    - `workerCount > corePoolSize`）
+     *    这些条件适用于超时等待之前和之后，如果队列非空，且该线程不是池中的最后一个线程。
+     *
+     *
+     * 返回任务，或者在工作线程必须退出时返回 null，此时 `workerCount` 会减少。
      */
     private Runnable getTask() {
-        boolean timedOut = false; // Did the last poll() time out?
-
+        boolean timedOut = false; // 是否上次调用 workQueue.poll() 时超时？
         for (; ; ) {
             int c = ctl.get();
-
-            // Check if queue empty only if necessary.
-            if (runStateAtLeast(c, SHUTDOWN)
-                    && (runStateAtLeast(c, STOP) || workQueue.isEmpty())) {
+            // 根据线程池状态判断当前想要获取任务的线程是否应该退出
+            if (runStateAtLeast(c, SHUTDOWN) && (runStateAtLeast(c, STOP) || workQueue.isEmpty())) {
                 decrementWorkerCount();
                 return null;
             }
-
             int wc = workerCountOf(c);
-
-            // Are workers subject to culling?
+            // 判断当前工作线程是否可能被淘汰
             boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
-
-            if ((wc > maximumPoolSize || (timed && timedOut))
-                    && (wc > 1 || workQueue.isEmpty())) {
+            // 判断是否应终止当前工作线程
+            if ((wc > maximumPoolSize || (timed && timedOut)) && (wc > 1 || workQueue.isEmpty())) {
+                // 如果当前线程数大于最大池大小，或者超时且允许超时的工作线程被终止
+                // 且当前队列为空，尝试通过 CAS 操作减少工作线程数
                 if (compareAndDecrementWorkerCount(c))
-                    return null;
-                continue;
+                    return null;  // 如果成功减少工作线程数，返回 null，退出当前线程
+                continue;  // 否则重新获取当前控制状态
             }
-
             try {
-                Runnable r = timed ?
-                        workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
-                        workQueue.take();
+                // 根据是否超时来决定从队列中获取任务的方式
+                Runnable r = timed ? workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :  // 如果超时，使用 poll() 方法
+                        workQueue.take();  // 如果没有超时，使用 take() 方法
                 if (r != null)
-                    return r;
-                timedOut = true;
+                    return r;  // 如果成功获取到任务，返回该任务
+                timedOut = true;  // 如果没有获取到任务，标记为超时
             } catch (InterruptedException retry) {
-                timedOut = false;
+                timedOut = false;  // 如果被中断，重置超时标记
             }
         }
     }
+
 
     /**
      * Main worker run loop.  Repeatedly gets tasks from queue and
@@ -1311,10 +1297,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                               BlockingQueue<Runnable> workQueue,
                               ThreadFactory threadFactory,
                               RejectedExecutionHandler handler) {
-        if (corePoolSize < 0 ||
-                maximumPoolSize <= 0 ||
-                maximumPoolSize < corePoolSize ||
-                keepAliveTime < 0)
+        if (corePoolSize < 0 || maximumPoolSize <= 0 || maximumPoolSize < corePoolSize || keepAliveTime < 0)
             throw new IllegalArgumentException();
         if (workQueue == null || threadFactory == null || handler == null)
             throw new NullPointerException();

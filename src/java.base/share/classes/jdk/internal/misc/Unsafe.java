@@ -2395,15 +2395,10 @@ public final class Unsafe {
     public native void unpark(Object thread);
 
     /**
-     * Blocks current thread, returning when a balancing
-     * {@code unpark} occurs, or a balancing {@code unpark} has
-     * already occurred, or the thread is interrupted, or, if not
-     * absolute and time is not zero, the given time nanoseconds have
-     * elapsed, or if absolute, the given deadline in milliseconds
-     * since Epoch has passed, or spuriously (i.e., returning for no
-     * "reason"). Note: This operation is in the Unsafe class only
-     * because {@code unpark} is, so it would be strange to place it
-     * elsewhere.
+     * 阻塞当前线程，直到发生匹配的 {@code unpark} 调用，或者匹配的 {@code unpark} 已经发生，
+     * 或者线程被中断，或者在非绝对模式下，指定的时间（以纳秒为单位）已经过去，
+     * 或者在绝对模式下，指定的自纪元以来的毫秒截止时间已过，或者发生了假唤醒（即，返回时没有任何“原因”）。
+     * 注意：此操作仅在 Unsafe 类中，因为 {@code unpark} 也在其中，所以将其放在其他地方会显得不合适。
      */
     @IntrinsicCandidate
     public native void park(boolean isAbsolute, long time);

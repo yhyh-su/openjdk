@@ -469,7 +469,7 @@ public abstract class AbstractQueuedSynchronizer
     abstract static class Node {
         volatile Node prev;       // initially attached via casTail
         volatile Node next;       // visibly nonnull when signallable
-        Thread waiter;            // visibly nonnull when enqueued
+        Thread waiter;            // 入队时明显非空
         volatile int status;      // written by owner, atomic bit ops by others
 
         // methods for atomic operations
@@ -537,7 +537,7 @@ public abstract class AbstractQueuedSynchronizer
     private transient volatile Node head;
 
     /**
-     * Tail of the wait queue. After initialization, modified only via casTail.
+     * 等待队列的尾部。在初始化后，仅通过 casTail 进行修改。
      */
     private transient volatile Node tail;
 
@@ -579,28 +579,36 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Tries to CAS a new dummy node for head.
-     * Returns new tail, or null if OutOfMemory
+     * 尝试通过 CAS 操作为头节点初始化一个新的 dummy 节点。
+     * 如果成功，返回新的尾节点；如果发生 OutOfMemoryError，返回 null。
      */
     private Node tryInitializeHead() {
+        // 初始化时，h 为 null，t 用于存储尾节点
         for (Node h = null, t; ; ) {
+            // 如果 tail 不为空，表示队列已经初始化，直接返回尾节点
             if ((t = tail) != null)
                 return t;
+                // 如果 head 已经不为空，表示其他线程可能正在初始化队列，此时进行自旋等待
             else if (head != null)
                 Thread.onSpinWait();
+                // 如果 head 为空，表示队列还未初始化，尝试初始化队列
             else {
+                // 如果 h 还为 null，则创建一个新的 ExclusiveNode 作为 dummy 节点
                 if (h == null) {
                     try {
-                        h = new ExclusiveNode();
+                        h = new ExclusiveNode();  // 创建一个新的 ExclusiveNode 节点
                     } catch (OutOfMemoryError oome) {
-                        return null;
+                        return null;  // 如果内存不足，返回 null
                     }
                 }
+                // 使用 CAS 操作将 head 设置为 h，确保只有一个线程能够成功初始化头节点
                 if (U.compareAndSetReference(this, HEAD, null, h))
+                    // 如果 CAS 操作成功，将尾节点设置为 h 并返回
                     return tail = h;
             }
         }
     }
+
 
     /**
      * Enqueues the node unless null. (Currently used only for
@@ -636,18 +644,28 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Wakes up the successor of given node, if one exists, and unsets its
-     * WAITING status to avoid park race. This may fail to wake up an
-     * eligible thread when one or more have been cancelled, but
-     * cancelAcquire ensures liveness.
+     * 唤醒给定节点的后继节点（如果存在），并清除其 `WAITING` 状态以避免出现等待竞态。
+     *
+     * <p>此方法会检查给定节点（h）的下一个节点（s）。如果下一个节点存在并且其状态不是 `0`（即它正在等待），
+     * 则调用 `getAndUnsetStatus(WAITING)` 清除 `WAITING` 状态，确保该线程不会在等待时发生竞态，
+     * 随后通过 `LockSupport.unpark(s.waiter)` 唤醒该线程。
+     *
+     * <p>如果一个或多个线程被取消，这个方法可能无法成功唤醒一个符合条件的线程，但
+     * {@link #cancelAcquire} 方法会确保系统的活性，防止死锁。
+     *
+     * @param h 当前节点，表示队列中的头节点
      */
     private static void signalNext(Node h) {
         Node s;
+        // 检查当前节点是否非空，并且有下一个节点且下一个节点状态不是 0（即等待中）
         if (h != null && (s = h.next) != null && s.status != 0) {
+            // 清除下一个节点的等待状态
             s.getAndUnsetStatus(WAITING);
+            // 唤醒下一个节点等待的线程
             LockSupport.unpark(s.waiter);
         }
     }
+
 
     /** Wakes up the given node if in shared mode */
     private static void signalNextIfShared(Node h) {
@@ -708,104 +726,94 @@ public abstract class AbstractQueuedSynchronizer
         // 当前线程引用
         Thread current = Thread.currentThread();
         byte spins = 0, postSpins = 0;   // 重试次数，首次线程唤醒后的重试
-        boolean interrupted = false, first = false;
-        Node pred = null;               // 前驱节点，当节点排队时，指向其前驱
-
-        /*
-         * 重复执行：
-         * 1. 检查当前节点是否为队列中的第一个节点
-         *    如果是，确保头节点稳定；否则，确保前驱节点有效。
-         * 2. 如果当前节点是队列中的第一个节点或还没有入队，尝试获取锁。
-         * 3. 如果队列尚未初始化，通过添加新头节点来初始化。
-         * 4. 如果当前节点尚未创建，尝试创建它。
-         * 5. 如果节点未入队，尝试一次性将其入队。
-         * 6. 如果节点被唤醒，则重试。
-         * 7. 如果节点处于等待状态，则设置该状态并重试。
-         * 8. 如果所有条件都不满足，则让当前线程进入等待状态并检查取消情况。
-         */
+        boolean interrupted = false, first = false;  // interrupted 标记是否中断，first 用于判断是否是队列第一个节点
+        Node pred = null;  // 前驱节点，用来检查节点是否入队
         for (; ; ) {
-            // 处理节点的前驱节点，检查当前节点是否在队列的第一个位置
+            // 如果当前节点已经入队并且不是队列的第一个节点
             if (!first && (pred = (node == null) ? null : node.prev) != null && !(first = (head == pred))) {
                 if (pred.status < 0) {
-                    cleanQueue();           // 如果前驱节点被取消，则清理队列
+                    cleanQueue();  // 如果前驱节点状态不正常，清理队列
                     continue;
                 } else if (pred.prev == null) {
-                    Thread.onSpinWait();    // 保证序列化，避免频繁的 CPU 空转
+                    Thread.onSpinWait();  // 空转等待
                     continue;
                 }
             }
-
-            // 如果当前节点是队列中的第一个节点，或者前驱节点为空，则尝试获取锁
+            // 如果当前节点是队列的第一个节点，或节点还未入队
             if (first || pred == null) {
                 boolean acquired;
                 try {
+                    // 尝试获取锁（共享模式或者独占模式）
                     if (shared)
-                        acquired = (tryAcquireShared(arg) >= 0);  // 共享模式下尝试获取锁
+                        acquired = (tryAcquireShared(arg) >= 0);
                     else
-                        acquired = tryAcquire(arg);  // 独占模式下尝试获取锁
+                        acquired = tryAcquire(arg);
                 } catch (Throwable ex) {
-                    cancelAcquire(node, interrupted, false); // 获取锁失败，取消获取
+                    cancelAcquire(node, interrupted, false);  // 获取锁失败，取消请求
                     throw ex;  // 抛出异常
                 }
                 if (acquired) {
                     if (first) {
                         node.prev = null;
-                        head = node;   // 设置头节点为当前节点
+                        head = node;  // 设置头节点
                         pred.next = null;
                         node.waiter = null;
                         if (shared)
-                            signalNextIfShared(node);  // 如果是共享模式，发出信号
+                            signalNextIfShared(node);  // 如果是共享模式，通知后继线程
                         if (interrupted)
-                            current.interrupt();  // 如果被中断，则中断当前线程
+                            current.interrupt();  // 如果线程中断，通知线程
                     }
                     return 1;  // 成功获取锁，返回 1
                 }
             }
 
-            // 队列初始化部分
             Node t;
-            if ((t = tail) == null) {           // 队列为空时，初始化队列
+            // 如果队列未初始化
+            if ((t = tail) == null) {
                 if (tryInitializeHead() == null)
-                    return acquireOnOOME(shared, arg);  // 如果初始化失败，尝试恢复
-            } else if (node == null) {          // 如果当前节点为空，分配新的节点
+                    return acquireOnOOME(shared, arg);  // 初始化失败，处理内存不足的情况
+            }
+            // 如果当前节点未初始化
+            else if (node == null) {
                 try {
-                    node = (shared) ? new SharedNode() : new ExclusiveNode();
+                    node = (shared) ? new SharedNode() : new ExclusiveNode();  // 创建新节点
                 } catch (OutOfMemoryError oome) {
-                    return acquireOnOOME(shared, arg);  // 如果内存不足，尝试恢复
+                    return acquireOnOOME(shared, arg);  // 内存不足时处理
                 }
-            } else if (pred == null) {          // 尝试将节点入队
+            }
+            // 如果当前节点未入队
+            else if (pred == null) {
                 node.waiter = current;
-                node.setPrevRelaxed(t);         // 为了避免不必要的内存屏障，使用 relaxed 操作
-                if (!casTail(t, node))  // 使用 CAS 操作确保将节点插入到队尾
-                    node.setPrevRelaxed(null);  // 如果入队失败，回滚操作
+                node.setPrevRelaxed(t);  // 使用 relaxed 操作避免不必要的内存屏障
+                if (!casTail(t, node))  // 用 CAS 操作确保加入队尾
+                    node.setPrevRelaxed(null);
                 else
-                    t.next = node;  // 成功入队，将节点的 next 指向自己
-            } else if (first && spins != 0) {  // 如果是第一个节点，并且有重试次数
-                --spins;                        // 减少重试次数，避免不公平性
-                Thread.onSpinWait();            // 提示 CPU 进行空转等待
-            } else if (node.status == 0) {      // 如果节点的状态是 0，则将状态设置为 WAITING
-                node.status = WAITING;          // 启用信号并重新检查
-            } else {                            // 其他情况，线程进入等待状态
-                spins = postSpins = (byte) ((postSpins << 1) | 1);  // 更新重试次数
+                    t.next = node;
+            } else if (first && spins != 0) {
+                --spins;
+                Thread.onSpinWait();  // 提示 CPU 进行空转
+            } else if (node.status == 0) {
+                node.status = WAITING;  // 设置节点状态为等待
+            } else {
+                spins = postSpins = (byte) ((postSpins << 1) | 1);
                 try {
                     long nanos;
                     if (!timed)
-                        LockSupport.park(this);  // 如果没有超时，线程进入等待状态
+                        LockSupport.park(this);  // 不限时等待
                     else if ((nanos = time - System.nanoTime()) > 0L)
-                        LockSupport.parkNanos(this, nanos);  // 如果有超时，使用定时等待
+                        LockSupport.parkNanos(this, nanos);  // 限时等待
                     else
-                        break;  // 超时则跳出循环
+                        break;  // 超时退出
                 } catch (Error | RuntimeException ex) {
-                    cancelAcquire(node, interrupted, interruptible);  // 如果发生异常，取消获取
+                    cancelAcquire(node, interrupted, interruptible);  // 发生异常时，取消获取
                     throw ex;
                 }
-                node.clearStatus();  // 清除节点的状态
+                node.clearStatus();  // 清除节点状态
                 if ((interrupted |= Thread.interrupted()) && interruptible)
-                    break;  // 如果线程被中断且允许中断，则跳出循环
+                    break;  // 如果线程被中断且允许中断，退出
             }
         }
-
-        return cancelAcquire(node, interrupted, interruptible);  // 取消获取锁的操作
+        return cancelAcquire(node, interrupted, interruptible);  // 如果获取失败，取消锁获取
     }
 
 
@@ -823,9 +831,8 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Possibly repeatedly traverses from tail, unsplicing cancelled
-     * nodes until none are found. Unparks nodes that may have been
-     * relinked to be next eligible acquirer.
+     * 可能会反复从尾部遍历，解开已取消的节点，直到找不到为止。
+     * 重新唤醒可能已经被重新链接为下一个合适获取者的节点。
      */
     private void cleanQueue() {
         for (; ; ) {                               // restart point
@@ -884,30 +891,20 @@ public abstract class AbstractQueuedSynchronizer
     // Main exported methods
 
     /**
-     * Attempts to acquire in exclusive mode. This method should query
-     * if the state of the object permits it to be acquired in the
-     * exclusive mode, and if so to acquire it.
+     * 尝试以独占模式获取锁。此方法应该查询对象的状态，判断是否允许以独占模式获取锁，
+     * 如果允许，则获取锁。
      *
-     * <p>This method is always invoked by the thread performing
-     * acquire.  If this method reports failure, the acquire method
-     * may queue the thread, if it is not already queued, until it is
-     * signalled by a release from some other thread. This can be used
-     * to implement method {@link Lock#tryLock()}.
+     * <p>此方法总是由执行获取操作的线程调用。如果该方法报告失败，获取方法可能会将线程排队，
+     * 如果线程尚未排队，直到它被其他线程的释放信号唤醒。这可以用来实现 {@link Lock#tryLock()} 方法。
      *
-     * <p>The default
-     * implementation throws {@link UnsupportedOperationException}.
+     * <p>默认实现抛出 {@link UnsupportedOperationException}。
      *
-     * @param arg the acquire argument. This value is always the one
-     *        passed to an acquire method, or is the value saved on entry
-     *        to a condition wait.  The value is otherwise uninterpreted
-     *        and can represent anything you like.
-     * @return {@code true} if successful. Upon success, this object has
-     *         been acquired.
-     * @throws IllegalMonitorStateException if acquiring would place this
-     *         synchronizer in an illegal state. This exception must be
-     *         thrown in a consistent fashion for synchronization to work
-     *         correctly.
-     * @throws UnsupportedOperationException if exclusive mode is not supported
+     * @param arg 获取锁时的参数。该值总是传递给获取方法的值，或者是条件等待时保存的值。
+     * 该值不会被解释，可以表示任何您喜欢的内容。
+     * @return {@code true} 如果成功。在成功时，该对象已被获取。
+     * @throws IllegalMonitorStateException 如果获取锁会使该同步器处于非法状态。为了同步的正确性，
+     * 该异常必须以一致的方式抛出。
+     * @throws UnsupportedOperationException 如果不支持独占模式
      */
     protected boolean tryAcquire(int arg) {
         throw new UnsupportedOperationException();
@@ -1033,23 +1030,15 @@ public abstract class AbstractQueuedSynchronizer
 
 
     /**
-     * Acquires in exclusive mode, aborting if interrupted.
-     * Implemented by first checking interrupt status, then invoking
-     * at least once {@link #tryAcquire}, returning on
-     * success.  Otherwise the thread is queued, possibly repeatedly
-     * blocking and unblocking, invoking {@link #tryAcquire}
-     * until success or the thread is interrupted.  This method can be
-     * used to implement method {@link Lock#lockInterruptibly}.
-     *
-     * @param arg the acquire argument.  This value is conveyed to
-     *        {@link #tryAcquire} but is otherwise uninterpreted and
-     *        can represent anything you like.
-     * @throws InterruptedException if the current thread is interrupted
+     * 以独占模式获取锁，如果被中断则中止。
+     * 实现方式是首先检查中断状态，然后至少调用一次 {@link #tryAcquire}，在成功时返回。
+     * 否则，线程会进入队列，可能会反复阻塞和解除阻塞，反复调用 {@link #tryAcquire}
+     * 直到成功或线程被中断。此方法可以用于实现 {@link Lock#lockInterruptibly} 方法。
+     * @param arg 获取锁时的参数。该值会传递给 {@link #tryAcquire}，但其他情况下不做解释，可以表示任何您喜欢的内容。
+     * @throws InterruptedException 如果当前线程被中断
      */
-    public final void acquireInterruptibly(int arg)
-            throws InterruptedException {
-        if (Thread.interrupted() ||
-                (!tryAcquire(arg) && acquire(null, arg, false, true, false, 0L) < 0))
+    public final void acquireInterruptibly(int arg) throws InterruptedException {
+        if (Thread.interrupted() || (!tryAcquire(arg) && acquire(null, arg, false, true, false, 0L) < 0))
             throw new InterruptedException();
     }
 
@@ -1077,22 +1066,29 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Releases in exclusive mode.  Implemented by unblocking one or
-     * more threads if {@link #tryRelease} returns true.
-     * This method can be used to implement method {@link Lock#unlock}.
+     * 在独占模式下释放锁。如果 {@link #tryRelease} 返回 true，则会解锁并唤醒一个或多个线程。
+     * 该方法可以用于实现 {@link Lock#unlock} 方法。
      *
-     * @param arg the release argument.  This value is conveyed to
-     *        {@link #tryRelease} but is otherwise uninterpreted and
-     *        can represent anything you like.
-     * @return the value returned from {@link #tryRelease}
+     * <p>此方法的核心操作是：尝试释放锁。如果锁被成功释放（通过 {@link #tryRelease} 返回 true），
+     * 它将唤醒等待队列中的下一个线程（通过调用 {@link #signalNext}）。
+     *
+     * <p>如果 {@link #tryRelease} 返回 false，表示释放锁失败，方法将返回 false。
+     *
+     * @param arg 释放锁时的参数。该值传递给 {@link #tryRelease} 方法，
+     *            但在本方法中不进行解释，可以代表任何你需要的内容。
+     * @return 如果 {@link #tryRelease} 返回 true，则返回 true，表示锁成功释放并唤醒了下一个线程；
+     *         如果 {@link #tryRelease} 返回 false，则返回 false，表示锁释放失败。
      */
     public final boolean release(int arg) {
+        // 尝试释放锁，如果释放成功
         if (tryRelease(arg)) {
+            // 唤醒队列中的下一个线程
             signalNext(head);
-            return true;
+            return true;  // 成功释放锁并唤醒线程
         }
-        return false;
+        return false;  // 锁释放失败
     }
+
 
     /**
      * Acquires in shared mode, ignoring interrupts.  Implemented by

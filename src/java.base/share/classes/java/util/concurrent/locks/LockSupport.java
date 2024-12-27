@@ -142,6 +142,10 @@ import jdk.internal.misc.Unsafe;
 public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.
 
+    /**
+     * 设置线程{@code t} 的阻塞对象为 {@code arg}
+     * 通过设置阻塞对象，可以在恢复线程时了解线程为何被挂起。
+     */
     private static void setBlocker(Thread t, Object arg) {
         U.putReferenceOpaque(t, PARKBLOCKER, arg);
     }
@@ -458,8 +462,7 @@ public class LockSupport {
 
     // Hotspot implementation via intrinsics API
     private static final Unsafe U = Unsafe.getUnsafe();
-    private static final long PARKBLOCKER
-        = U.objectFieldOffset(Thread.class, "parkBlocker");
+    private static final long PARKBLOCKER = U.objectFieldOffset(Thread.class, "parkBlocker");
 
     private static final JavaLangAccess JLA = SharedSecrets.getJavaLangAccess();
 }

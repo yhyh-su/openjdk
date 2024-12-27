@@ -308,23 +308,26 @@ public class Thread implements Runnable {
     static native Object findScopedValueBindings();
 
     /**
-     * Inherit the scoped-value bindings from the given container.
-     * Invoked when starting a thread.
+     * 从给定的容器中继承作用域值绑定。
+     * 在启动线程时调用此方法。
      */
     void inheritScopedValueBindings(ThreadContainer container) {
+        // 声明一个变量，用于保存容器的作用域值绑定快照
         ScopedValueContainer.BindingsSnapshot snapshot;
-        if (container.owner() != null
-                && (snapshot = container.scopedValueBindings()) != null) {
-
-            // bindings established for running/calling an operation
+        // 检查容器的拥有者是否不为 null，并且容器中是否有作用域值绑定快照
+        if (container.owner() != null && (snapshot = container.scopedValueBindings()) != null) {
+            // 获取容器中为当前操作或线程运行所设定的作用域值绑定
             Object bindings = snapshot.scopedValueBindings();
+            // 检查当前线程的作用域值绑定是否与容器中提供的绑定相同
             if (currentThread().scopedValueBindings != bindings) {
+                // 如果作用域值绑定发生了变化，抛出异常
                 throw new StructureViolationException("Scoped value bindings have changed");
             }
-
+            // 如果没有问题，将容器中的作用域值绑定赋值给当前线程
             this.scopedValueBindings = bindings;
         }
     }
+
 
     /*
      * Lock object for thread interrupt.
@@ -332,10 +335,9 @@ public class Thread implements Runnable {
     final Object interruptLock = new Object();
 
     /**
-     * The argument supplied to the current call to
-     * java.util.concurrent.locks.LockSupport.park.
-     * Set by (private) java.util.concurrent.locks.LockSupport.setBlocker
-     * Accessed using java.util.concurrent.locks.LockSupport.getBlocker
+     * 当前调用 java.util.concurrent.locks.LockSupport.park 时提供的参数。
+     * 由（私有）java.util.concurrent.locks.LockSupport.setBlocker 设置，
+     * 使用 java.util.concurrent.locks.LockSupport.getBlocker 访问。
      */
     private volatile Object parkBlocker;
 
@@ -587,42 +589,8 @@ public class Thread implements Runnable {
         sleepNanos(nanos);
     }
 
-    /**
-     * Indicates that the caller is momentarily unable to progress, until the
-     * occurrence of one or more actions on the part of other activities. By
-     * invoking this method within each iteration of a spin-wait loop construct,
-     * the calling thread indicates to the runtime that it is busy-waiting.
-     * The runtime may take action to improve the performance of invoking
-     * spin-wait loop constructions.
-     *
-     * @apiNote
-     * As an example consider a method in a class that spins in a loop until
-     * some flag is set outside of that method. A call to the {@code onSpinWait}
-     * method should be placed inside the spin loop.
-     * {@snippet :
-     *     class EventHandler {
-     *         volatile boolean eventNotificationNotReceived;
-     *         void waitForEventAndHandleIt() {
-     *             while ( eventNotificationNotReceived ) {
-     *                 Thread.onSpinWait();
-     *             }
-     *             readAndProcessEvent();
-     *         }
-     *
-     *         void readAndProcessEvent() {
-     *             // Read event from some source and process it
-     *              . . .
-     *         }
-     *     }
-     * }
-     * <p>
-     * The code above would remain correct even if the {@code onSpinWait}
-     * method was not called at all. However on some architectures the Java
-     * Virtual Machine may issue the processor instructions to address such
-     * code patterns in a more beneficial way.
-     *
-     * @since 9
-     */
+
+    // 相当于 Thread.sleep(0)，当前线程由运行态转为就绪态
     @IntrinsicCandidate
     public static void onSpinWait() {
     }
@@ -1428,37 +1396,38 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Schedules this thread to begin execution in the given thread container.
+     * 将当前线程安排到指定的线程容器中开始执行。
      * @throws IllegalStateException if the container is shutdown or closed
-     * @throws IllegalThreadStateException if the thread has already been started
+     *         如果线程容器已关闭或已关闭，抛出异常。
+     * @throws IllegalThreadStateException 如果线程已启动，抛出异常。
      */
     void start(ThreadContainer container) {
-        synchronized (this) {
+        synchronized (this) { // 锁住当前线程实例，确保线程状态的安全性
             // zero status corresponds to state "NEW".
-            if (holder.threadStatus != 0)
-                throw new IllegalThreadStateException();
-
-            // bind thread to container
-            if (this.container != null)
-                throw new IllegalThreadStateException();
-            setThreadContainer(container);
-
+            // 状态为零对应线程的“NEW”状态（线程尚未开始）。
+            if (holder.threadStatus != 0) throw new IllegalThreadStateException();
+            if (this.container != null) throw new IllegalThreadStateException();
+            setThreadContainer(container); // 设置线程的容器为指定的线程容器
             // start thread
-            boolean started = false;
-            container.onStart(this);  // may throw
+            // 开始线程的执行
+            boolean started = false; // 标志线程是否成功启动
+            // 通知容器线程开始执行，可能会抛出异常
+            container.onStart(this);
             try {
-                // scoped values may be inherited
+                // 继承容器中的作用域值绑定（比如线程相关的上下文信息等）
                 inheritScopedValueBindings(container);
-
+                // 调用低级启动方法，启动线程
                 start0();
-                started = true;
+                started = true; // 线程成功启动，标记为已启动
             } finally {
+                // 确保在启动失败时，容器能处理线程的退出操作
                 if (!started) {
-                    container.onExit(this);
+                    container.onExit(this);  // 如果线程未成功启动，通知容器线程退出
                 }
             }
         }
     }
+
 
     private native void start0();
 

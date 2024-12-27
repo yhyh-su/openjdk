@@ -498,7 +498,7 @@ public interface JavaLangAccess {
     ThreadContainer threadContainer(Thread thread);
 
     /**
-     * Starts a thread in the given ThreadContainer.
+     * 在给定的 ThreadContainer 中启动一个线程。
      */
     void start(Thread thread, ThreadContainer container);
 

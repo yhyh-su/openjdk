@@ -44,7 +44,7 @@ public class ThreadContainers {
     // true if all threads are tracked
     private static final boolean TRACK_ALL_THREADS;
 
-    // the root container
+    // 根容器
     private static final RootContainer ROOT_CONTAINER;
 
     // the set of thread containers registered with this class

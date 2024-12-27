@@ -252,11 +252,9 @@ public interface BlockingQueue<E> extends Queue<E> {
         throws InterruptedException;
 
     /**
-     * Retrieves and removes the head of this queue, waiting if necessary
-     * until an element becomes available.
-     *
-     * @return the head of this queue
-     * @throws InterruptedException if interrupted while waiting
+     * 检索并移除此队列的头元素，如果必要的话，等待直到有元素可用。
+     * @return 队列的头元素
+     * @throws InterruptedException 如果在等待过程中被中断
      */
     E take() throws InterruptedException;
 

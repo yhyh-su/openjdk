@@ -260,15 +260,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 
         /**
-         * 在初始尝试锁定（通过 initialTryLock）后，用于非重入锁的获取。
-         * 该方法尝试获取锁并检查锁的状态。
-         * @param acquires 锁定请求的数量。在通常的实现中，acquires 可能是 1，表示一个请求获取锁。
+         * 非重入地获取独占锁
+         * @param acquires 锁定请求的数量。
          * @return 如果成功获取锁，返回 {@code true}；否则返回 {@code false}。
          */
         protected final boolean tryAcquire(int acquires) {
-            // 如果当前状态是 0，表示锁未被任何线程持有
             if (getState() == 0 && compareAndSetState(0, acquires)) {
-                // 将当前线程设置为锁的独占拥有者
                 setExclusiveOwnerThread(Thread.currentThread());
                 return true;
             }
@@ -353,51 +350,41 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Acquires the lock unless the current thread is
-     * {@linkplain Thread#interrupt interrupted}.
+     * 获取锁，除非当前线程被 {@linkplain Thread#interrupt 中断}。
      *
-     * <p>Acquires the lock if it is not held by another thread and returns
-     * immediately, setting the lock hold count to one.
+     * <p>如果锁没有被其他线程持有，则立即获取锁，并将锁的持有计数设置为 1。
      *
-     * <p>If the current thread already holds this lock then the hold count
-     * is incremented by one and the method returns immediately.
+     * <p>如果当前线程已经持有该锁，则持有计数增加 1，并立即返回。
      *
-     * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling
-     * purposes and lies dormant until one of two things happens:
+     * <p>如果锁被其他线程持有，则当前线程会在线程调度中被禁用，并保持休眠状态，直到发生以下两种情况之一：
      *
      * <ul>
      *
-     * <li>The lock is acquired by the current thread; or
+     * <li>当前线程获取到锁；或者
      *
-     * <li>Some other thread {@linkplain Thread#interrupt interrupts} the
-     * current thread.
+     * <li>其他线程 {@linkplain Thread#interrupt 中断} 当前线程。
      *
      * </ul>
      *
-     * <p>If the lock is acquired by the current thread then the lock hold
-     * count is set to one.
+     * <p>如果当前线程获取到锁，则锁的持有计数设置为 1。
      *
-     * <p>If the current thread:
+     * <p>如果当前线程：
      *
      * <ul>
      *
-     * <li>has its interrupted status set on entry to this method; or
+     * <li>在进入此方法时已经设置了中断状态；或者
      *
-     * <li>is {@linkplain Thread#interrupt interrupted} while acquiring
-     * the lock,
+     * <li>在获取锁时被 {@linkplain Thread#interrupt 中断}，
      *
      * </ul>
      *
-     * then {@link InterruptedException} is thrown and the current thread's
-     * interrupted status is cleared.
+     * 则抛出 {@link InterruptedException}，并清除当前线程的中断状态。
      *
-     * <p>In this implementation, as this method is an explicit
-     * interruption point, preference is given to responding to the
-     * interrupt over normal or reentrant acquisition of the lock.
+     * <p>在此实现中，由于该方法是一个显式的中断点，因此在处理锁的正常或重入获取时，优先响应中断。
      *
-     * @throws InterruptedException if the current thread is interrupted
+     * @throws InterruptedException 如果当前线程被中断
      */
+
     public void lockInterruptibly() throws InterruptedException {
         sync.lockInterruptibly();
     }
@@ -510,15 +497,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Attempts to release this lock.
+     * 尝试释放此锁。
      *
-     * <p>If the current thread is the holder of this lock then the hold
-     * count is decremented.  If the hold count is now zero then the lock
-     * is released.  If the current thread is not the holder of this
-     * lock then {@link IllegalMonitorStateException} is thrown.
+     * <p>如果当前线程是此锁的持有者，则持有计数会递减。如果持有计数现在为零，则锁被释放。
+     * 如果当前线程不是此锁的持有者，则会抛出 {@link IllegalMonitorStateException} 异常。
      *
-     * @throws IllegalMonitorStateException if the current thread does not
-     *         hold this lock
+     * @throws IllegalMonitorStateException 如果当前线程不持有此锁
      */
     public void unlock() {
         sync.release(1);
