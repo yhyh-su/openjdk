@@ -223,6 +223,7 @@ import jdk.internal.util.StaticProperty;
 public abstract class ClassLoader {
 
     private static native void registerNatives();
+
     static {
         registerNatives();
     }
@@ -245,13 +246,17 @@ public abstract class ClassLoader {
      * Encapsulates the set of parallel capable loader types.
      */
     private static class ParallelLoaders {
-        private ParallelLoaders() {}
+        private ParallelLoaders() {
+        }
 
         // the set of parallel capable loader types
         private static final Set<Class<? extends ClassLoader>> loaderTypes =
-            Collections.newSetFromMap(new WeakHashMap<>());
+                Collections.newSetFromMap(new WeakHashMap<>());
+
         static {
-            synchronized (loaderTypes) { loaderTypes.add(ClassLoader.class); }
+            synchronized (loaderTypes) {
+                loaderTypes.add(ClassLoader.class);
+            }
         }
 
         /**
@@ -305,8 +310,8 @@ public abstract class ClassLoader {
     // The "default" domain. Set as the default ProtectionDomain on newly
     // created classes.
     private final ProtectionDomain defaultDomain =
-        new ProtectionDomain(new CodeSource(null, (Certificate[]) null),
-                             null, this, null);
+            new ProtectionDomain(new CodeSource(null, (Certificate[]) null),
+                    null, this, null);
 
     // Invoked by the VM to record every loaded class with this loader.
     void addClass(Class<?> c) {
@@ -384,7 +389,7 @@ public abstract class ClassLoader {
      */
     private static String nameAndId(ClassLoader ld) {
         String nid = ld.getName() != null ? "\'" + ld.getName() + "\'"
-                                          : ld.getClass().getName();
+                : ld.getClass().getName();
         if (!(ld instanceof BuiltinClassLoader)) {
             String id = Integer.toHexString(System.identityHashCode(ld));
             nid = nid + " @" + id;
@@ -410,7 +415,7 @@ public abstract class ClassLoader {
      *
      * @throws IllegalArgumentException if the given name is empty.
      *
-     * @since  9
+     * @since 9
      */
     @SuppressWarnings("this-escape")
     protected ClassLoader(String name, ClassLoader parent) {
@@ -428,7 +433,7 @@ public abstract class ClassLoader {
      * @param  parent
      *         The parent class loader
      *
-     * @since  1.2
+     * @since 1.2
      */
     @SuppressWarnings("this-escape")
     protected ClassLoader(ClassLoader parent) {
@@ -481,9 +486,9 @@ public abstract class ClassLoader {
      * @param   name
      *          The <a href="#binary-name">binary name</a> of the class
      *
-     * @return  The resulting {@code Class} object
+     * @return The resulting {@code Class} object
      *
-     * @throws  ClassNotFoundException
+     * @throws ClassNotFoundException
      *          If the class was not found
      */
     public Class<?> loadClass(String name) throws ClassNotFoundException {
@@ -526,14 +531,13 @@ public abstract class ClassLoader {
      * @param   resolve
      *          If {@code true} then resolve the class
      *
-     * @return  The resulting {@code Class} object
+     * @return The resulting {@code Class} object
      *
-     * @throws  ClassNotFoundException
+     * @throws ClassNotFoundException
      *          If the class could not be found
      */
     protected Class<?> loadClass(String name, boolean resolve)
-        throws ClassNotFoundException
-    {
+            throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             // First, check if the class has already been loaded
             Class<?> c = findLoadedClass(name);
@@ -636,7 +640,7 @@ public abstract class ClassLoader {
      *
      * @see #loadClass(String, boolean)
      *
-     * @since  1.7
+     * @since 1.7
      */
     protected Object getClassLoadingLock(String className) {
         Object lock = this;
@@ -662,12 +666,12 @@ public abstract class ClassLoader {
      * @param   name
      *          The <a href="#binary-name">binary name</a> of the class
      *
-     * @return  The resulting {@code Class} object
+     * @return The resulting {@code Class} object
      *
-     * @throws  ClassNotFoundException
+     * @throws ClassNotFoundException
      *          If the class could not be found
      *
-     * @since  1.2
+     * @since 1.2
      */
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         throw new ClassNotFoundException(name);
@@ -702,7 +706,8 @@ public abstract class ClassLoader {
         if (moduleName == null) {
             try {
                 return findClass(name);
-            } catch (ClassNotFoundException ignore) { }
+            } catch (ClassNotFoundException ignore) {
+            }
         }
         return null;
     }
@@ -726,17 +731,17 @@ public abstract class ClassLoader {
      * @param  len
      *         The length of the class data
      *
-     * @return  The {@code Class} object that was created from the specified
+     * @return The {@code Class} object that was created from the specified
      *          class data
      *
-     * @throws  ClassFormatError
+     * @throws ClassFormatError
      *          If the data did not contain a valid class
      *
-     * @throws  IndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *          If either {@code off} or {@code len} is negative, or if
      *          {@code off+len} is greater than {@code b.length}.
      *
-     * @throws  SecurityException
+     * @throws SecurityException
      *          If an attempt is made to add this class to a package that
      *          contains classes that were signed by a different set of
      *          certificates than this class, or if an attempt is made
@@ -746,13 +751,12 @@ public abstract class ClassLoader {
      * @see  #loadClass(String, boolean)
      * @see  #resolveClass(Class)
      *
-     * @deprecated  Replaced by {@link #defineClass(String, byte[], int, int)
+     * @deprecated Replaced by {@link #defineClass(String, byte[], int, int)
      * defineClass(String, byte[], int, int)}
      */
-    @Deprecated(since="1.1")
+    @Deprecated(since = "1.1")
     protected final Class<?> defineClass(byte[] b, int off, int len)
-        throws ClassFormatError
-    {
+            throws ClassFormatError {
         return defineClass(null, b, off, len, null);
     }
 
@@ -797,17 +801,17 @@ public abstract class ClassLoader {
      * @param  len
      *         The length of the class data
      *
-     * @return  The {@code Class} object that was created from the specified
+     * @return The {@code Class} object that was created from the specified
      *          class data.
      *
-     * @throws  ClassFormatError
+     * @throws ClassFormatError
      *          If the data did not contain a valid class
      *
-     * @throws  IndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *          If either {@code off} or {@code len} is negative, or if
      *          {@code off+len} is greater than {@code b.length}.
      *
-     * @throws  SecurityException
+     * @throws SecurityException
      *          If an attempt is made to add this class to a package that
      *          contains classes that were signed by a different set of
      *          certificates than this class (which is unsigned), or if
@@ -818,11 +822,10 @@ public abstract class ClassLoader {
      * @see  java.security.CodeSource
      * @see  java.security.SecureClassLoader
      *
-     * @since  1.1
+     * @since 1.1
      */
     protected final Class<?> defineClass(String name, byte[] b, int off, int len)
-        throws ClassFormatError
-    {
+            throws ClassFormatError {
         return defineClass(name, b, off, len, null);
     }
 
@@ -832,8 +835,7 @@ public abstract class ClassLoader {
           package.
     */
     private ProtectionDomain preDefineClass(String name,
-                                            ProtectionDomain pd)
-    {
+                                            ProtectionDomain pd) {
         if (!checkName(name))
             throw new NoClassDefFoundError("IllegalName: " + name);
 
@@ -843,8 +845,8 @@ public abstract class ClassLoader {
         if ((name != null) && name.startsWith("java.")
                 && this != getBuiltinPlatformClassLoader()) {
             throw new SecurityException
-                ("Prohibited package name: " +
-                 name.substring(0, name.lastIndexOf('.')));
+                    ("Prohibited package name: " +
+                            name.substring(0, name.lastIndexOf('.')));
         }
         if (pd == null) {
             pd = defaultDomain;
@@ -932,21 +934,21 @@ public abstract class ClassLoader {
      * @param  protectionDomain
      *         The {@code ProtectionDomain} of the class
      *
-     * @return  The {@code Class} object created from the data,
+     * @return The {@code Class} object created from the data,
      *          and {@code ProtectionDomain}.
      *
-     * @throws  ClassFormatError
+     * @throws ClassFormatError
      *          If the data did not contain a valid class
      *
-     * @throws  NoClassDefFoundError
+     * @throws NoClassDefFoundError
      *          If {@code name} is not {@code null} and not equal to the
      *          <a href="#binary-name">binary name</a> of the class specified by {@code b}
      *
-     * @throws  IndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *          If either {@code off} or {@code len} is negative, or if
      *          {@code off+len} is greater than {@code b.length}.
      *
-     * @throws  SecurityException
+     * @throws SecurityException
      *          If an attempt is made to add this class to a package that
      *          contains classes that were signed by a different set of
      *          certificates than this class, or if {@code name} begins with
@@ -955,8 +957,7 @@ public abstract class ClassLoader {
      */
     protected final Class<?> defineClass(String name, byte[] b, int off, int len,
                                          ProtectionDomain protectionDomain)
-        throws ClassFormatError
-    {
+            throws ClassFormatError {
         protectionDomain = preDefineClass(name, protectionDomain);
         String source = defineClassSourceLocation(protectionDomain);
         Class<?> c = defineClass1(this, name, b, off, len, protectionDomain, source);
@@ -1007,17 +1008,17 @@ public abstract class ClassLoader {
      * @param  protectionDomain
      *         The {@code ProtectionDomain} of the class, or {@code null}.
      *
-     * @return  The {@code Class} object created from the data,
+     * @return The {@code Class} object created from the data,
      *          and {@code ProtectionDomain}.
      *
-     * @throws  ClassFormatError
+     * @throws ClassFormatError
      *          If the data did not contain a valid class.
      *
-     * @throws  NoClassDefFoundError
+     * @throws NoClassDefFoundError
      *          If {@code name} is not {@code null} and not equal to the
      *          <a href="#binary-name">binary name</a> of the class specified by {@code b}
      *
-     * @throws  SecurityException
+     * @throws SecurityException
      *          If an attempt is made to add this class to a package that
      *          contains classes that were signed by a different set of
      *          certificates than this class, or if {@code name} begins with
@@ -1025,20 +1026,19 @@ public abstract class ClassLoader {
      *
      * @see      #defineClass(String, byte[], int, int, ProtectionDomain)
      *
-     * @since  1.5
+     * @since 1.5
      */
     protected final Class<?> defineClass(String name, java.nio.ByteBuffer b,
                                          ProtectionDomain protectionDomain)
-        throws ClassFormatError
-    {
+            throws ClassFormatError {
         int len = b.remaining();
 
         // Use byte[] if not a direct ByteBuffer:
         if (!b.isDirect()) {
             if (b.hasArray()) {
                 return defineClass(name, b.array(),
-                                   b.position() + b.arrayOffset(), len,
-                                   protectionDomain);
+                        b.position() + b.arrayOffset(), len,
+                        protectionDomain);
             } else {
                 // no array, or read-only array
                 byte[] tb = new byte[len];
@@ -1105,8 +1105,8 @@ public abstract class ClassLoader {
         Certificate[] pcerts = package2certs.putIfAbsent(pname, certs);
         if (pcerts != null && !compareCerts(pcerts, certs)) {
             throw new SecurityException("class \"" + name
-                + "\"'s signer information does not match signer information"
-                + " of other classes in the same package");
+                    + "\"'s signer information does not match signer information"
+                    + " of other classes in the same package");
         }
     }
 
@@ -1162,7 +1162,7 @@ public abstract class ClassLoader {
      * @param  c
      *         The class to link
      *
-     * @throws  NullPointerException
+     * @throws NullPointerException
      *          If {@code c} is {@code null}.
      *
      * @see  #defineClass(String, byte[], int, int)
@@ -1187,17 +1187,16 @@ public abstract class ClassLoader {
      * @param  name
      *         The <a href="#binary-name">binary name</a> of the class
      *
-     * @return  The {@code Class} object for the specified {@code name}
+     * @return The {@code Class} object for the specified {@code name}
      *
-     * @throws  ClassNotFoundException
+     * @throws ClassNotFoundException
      *          If the class could not be found
      *
      * @see  #ClassLoader(ClassLoader)
      * @see  #getParent()
      */
     protected final Class<?> findSystemClass(String name)
-        throws ClassNotFoundException
-    {
+            throws ClassNotFoundException {
         return getSystemClassLoader().loadClass(name);
     }
 
@@ -1223,10 +1222,10 @@ public abstract class ClassLoader {
      * @param  name
      *         The <a href="#binary-name">binary name</a> of the class
      *
-     * @return  The {@code Class} object, or {@code null} if the class has
+     * @return The {@code Class} object, or {@code null} if the class has
      *          not been loaded
      *
-     * @since  1.1
+     * @since 1.1
      */
     protected final Class<?> findLoadedClass(String name) {
         if (!checkName(name))
@@ -1246,7 +1245,7 @@ public abstract class ClassLoader {
      * @param  signers
      *         The signers for the class
      *
-     * @since  1.1
+     * @since 1.1
      */
     protected final void setSigners(Class<?> c, Object[] signers) {
         c.setSigners(signers);
@@ -1333,9 +1332,9 @@ public abstract class ClassLoader {
      *          constructed to locate the resource, or the resource is in a package
      *          that is not opened unconditionally.
      *
-     * @throws  NullPointerException If {@code name} is {@code null}
+     * @throws NullPointerException If {@code name} is {@code null}
      *
-     * @since  1.1
+     * @since 1.1
      */
     public URL getResource(String name) {
         Objects.requireNonNull(name);
@@ -1388,31 +1387,48 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  An enumeration of {@link java.net.URL URL} objects for the
+     * @return An enumeration of {@link java.net.URL URL} objects for the
      *          resource. If no resources could be found, the enumeration will
      *          be empty. Resources for which a {@code URL} cannot be
      *          constructed, or are in a package that is not opened
      *          unconditionally, are not returned in the enumeration.
      *
-     * @throws  IOException
+     * @throws IOException
      *          If I/O errors occur
-     * @throws  NullPointerException If {@code name} is {@code null}
+     * @throws NullPointerException If {@code name} is {@code null}
      *
-     * @since  1.2
+     * @since 1.2
+     */
+    /**
+     * 根据给定的资源名称查找所有可用的资源，返回包含这些资源 URL 的枚举。
+     *
+     * @param name 资源名称，可以是文件路径或类路径中的资源。
+     * @return 一个枚举，包含所有找到的资源的 URL。
+     * @throws IOException 如果在查找资源的过程中发生输入输出异常。
      */
     public Enumeration<URL> getResources(String name) throws IOException {
+        // 确保资源名称不为 null，防止后续操作出现空指针异常
         Objects.requireNonNull(name);
+
+        // 创建一个 Enumeration 数组，用于存储两个来源的资源集合
         @SuppressWarnings("unchecked")
         Enumeration<URL>[] tmp = (Enumeration<URL>[]) new Enumeration<?>[2];
-        if (parent != null) {
-            tmp[0] = parent.getResources(name);
-        } else {
-            tmp[0] = BootLoader.findResources(name);
-        }
-        tmp[1] = findResources(name);
 
+        // 如果 parent 不为 null，则从 parent 类加载器中获取资源
+        if (parent != null) {
+            tmp[0] = parent.getResources(name);  // 获取父类加载器的资源
+        } else {
+            // 如果没有父类加载器，则使用 BootLoader 查找资源
+            tmp[0] = BootLoader.findResources(name);  // 获取 BootLoader 的资源
+        }
+
+        // 从当前类加载器中查找资源
+        tmp[1] = findResources(name);  // 查找当前加载器中的资源
+
+        // 返回一个 CompoundEnumeration，组合两个 Enumeration，合并结果
         return new CompoundEnumeration<>(tmp);
     }
+
 
     /**
      * Returns a stream whose elements are the URLs of all the resources with
@@ -1449,14 +1465,14 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  A stream of resource {@link java.net.URL URL} objects. If no
+     * @return A stream of resource {@link java.net.URL URL} objects. If no
      *          resources could  be found, the stream will be empty. Resources
      *          for which a {@code URL} cannot be constructed, or are in a package
      *          that is not opened unconditionally, will not be in the stream.
      *
-     * @throws  NullPointerException If {@code name} is {@code null}
+     * @throws NullPointerException If {@code name} is {@code null}
      *
-     * @since  9
+     * @since 9
      */
     public Stream<URL> resources(String name) {
         Objects.requireNonNull(name);
@@ -1464,7 +1480,7 @@ public abstract class ClassLoader {
         Supplier<Spliterator<URL>> si = () -> {
             try {
                 return Spliterators.spliteratorUnknownSize(
-                    getResources(name).asIterator(), characteristics);
+                        getResources(name).asIterator(), characteristics);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -1493,7 +1509,7 @@ public abstract class ClassLoader {
      *          constructed to locate the resource, or the resource is in a package
      *          that is not opened unconditionally.
      *
-     * @since  1.2
+     * @since 1.2
      */
     protected URL findResource(String name) {
         return null;
@@ -1517,16 +1533,16 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  An enumeration of {@link java.net.URL URL} objects for
+     * @return An enumeration of {@link java.net.URL URL} objects for
      *          the resource. If no resources could  be found, the enumeration
      *          will be empty. Resources for which a {@code URL} cannot be
      *          constructed, or are in a package that is not opened unconditionally,
      *          are not returned in the enumeration.
      *
-     * @throws  IOException
+     * @throws IOException
      *          If I/O errors occur
      *
-     * @since  1.2
+     * @since 1.2
      */
     protected Enumeration<URL> findResources(String name) throws IOException {
         return Collections.emptyEnumeration();
@@ -1557,7 +1573,7 @@ public abstract class ClassLoader {
      *
      * @see #isRegisteredAsParallelCapable()
      *
-     * @since   1.7
+     * @since 1.7
      */
     @CallerSensitive
     protected static boolean registerAsParallelCapable() {
@@ -1583,7 +1599,7 @@ public abstract class ClassLoader {
      *
      * @see #registerAsParallelCapable()
      *
-     * @since   9
+     * @since 9
      */
     public final boolean isRegisteredAsParallelCapable() {
         return ParallelLoaders.isRegistered(this.getClass());
@@ -1604,12 +1620,12 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  A {@link java.net.URL URL} to the resource; {@code
+     * @return A {@link java.net.URL URL} to the resource; {@code
      *          null} if the resource could not be found, a URL could not be
      *          constructed to locate the resource, or the resource is in a package
      *          that is not opened unconditionally.
      *
-     * @since  1.1
+     * @since 1.1
      */
     public static URL getSystemResource(String name) {
         return getSystemClassLoader().getResource(name);
@@ -1634,20 +1650,19 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  An enumeration of {@link java.net.URL URL} objects for
+     * @return An enumeration of {@link java.net.URL URL} objects for
      *          the resource. If no resources could  be found, the enumeration
      *          will be empty. Resources for which a {@code URL} cannot be
      *          constructed, or are in a package that is not opened unconditionally,
      *          are not returned in the enumeration.
      *
-     * @throws  IOException
+     * @throws IOException
      *          If I/O errors occur
      *
-     * @since  1.2
+     * @since 1.2
      */
     public static Enumeration<URL> getSystemResources(String name)
-        throws IOException
-    {
+            throws IOException {
         return getSystemClassLoader().getResources(name);
     }
 
@@ -1667,13 +1682,13 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  An input stream for reading the resource; {@code null} if the
+     * @return An input stream for reading the resource; {@code null} if the
      *          resource could not be found, or the resource is in a package that
      *          is not opened unconditionally.
      *
-     * @throws  NullPointerException If {@code name} is {@code null}
+     * @throws NullPointerException If {@code name} is {@code null}
      *
-     * @since  1.1
+     * @since 1.1
      */
     public InputStream getResourceAsStream(String name) {
         Objects.requireNonNull(name);
@@ -1700,11 +1715,11 @@ public abstract class ClassLoader {
      * @param  name
      *         The resource name
      *
-     * @return  An input stream for reading the resource; {@code null} if the
+     * @return An input stream for reading the resource; {@code null} if the
      *          resource could not be found, or the resource is in a package that
      *          is not opened unconditionally.
      *
-     * @since  1.1
+     * @since 1.1
      */
     public static InputStream getSystemResourceAsStream(String name) {
         URL url = getSystemResource(name);
@@ -1724,9 +1739,9 @@ public abstract class ClassLoader {
      * will return {@code null} in such implementations if this class loader's
      * parent is the bootstrap class loader.
      *
-     * @return  The parent {@code ClassLoader}
+     * @return The parent {@code ClassLoader}
      *
-     * @since  1.2
+     * @since 1.2
      */
     public final ClassLoader getParent() {
         return parent;
@@ -1752,7 +1767,7 @@ public abstract class ClassLoader {
      * @implNote The name of the builtin platform class loader is
      * {@code "platform"}.
      *
-     * @return  The platform {@code ClassLoader}.
+     * @return The platform {@code ClassLoader}.
      *
      * @since 9
      */
@@ -1813,14 +1828,14 @@ public abstract class ClassLoader {
      * {@systemProperty jdk.net.URLClassPath.showIgnoredClassPathEntries} system
      * property is set to {@code true}.
      *
-     * @return  The system {@code ClassLoader}
+     * @return The system {@code ClassLoader}
      *
-     * @throws  IllegalStateException
+     * @throws IllegalStateException
      *          If invoked recursively during the construction of the class
      *          loader specified by the "{@code java.system.class.loader}"
      *          property.
      *
-     * @throws  Error
+     * @throws Error
      *          If the system property "{@code java.system.class.loader}"
      *          is defined but the named class could not be loaded, the
      *          provider class does not define the required constructor, or an
@@ -1862,7 +1877,7 @@ public abstract class ClassLoader {
     static synchronized ClassLoader initSystemClassLoader() {
         if (VM.initLevel() != 3) {
             throw new InternalError("system class loader cannot be set at initLevel " +
-                                    VM.initLevel());
+                    VM.initLevel());
         }
 
         // detect recursive initialization
@@ -1876,7 +1891,7 @@ public abstract class ClassLoader {
             try {
                 // custom class loader is only supported to be loaded from unnamed module
                 Constructor<?> ctor = Class.forName(cn, false, builtinLoader)
-                                           .getDeclaredConstructor(ClassLoader.class);
+                        .getDeclaredConstructor(ClassLoader.class);
                 scl = (ClassLoader) ctor.newInstance(builtinLoader);
             } catch (Exception e) {
                 Throwable cause = e;
@@ -1945,9 +1960,9 @@ public abstract class ClassLoader {
         // check if Package object is already defined
         NamedPackage pkg = packages.get(name);
         if (pkg instanceof Package)
-            return (Package)pkg;
+            return (Package) pkg;
 
-        return (Package)packages.compute(name, (n, p) -> toPackage(n, p, m));
+        return (Package) packages.compute(name, (n, p) -> toPackage(n, p, m));
     }
 
     /*
@@ -1960,7 +1975,7 @@ public abstract class ClassLoader {
 
         // otherwise, replace the NamedPackage object with Package object
         if (p instanceof Package)
-            return (Package)p;
+            return (Package) p;
 
         return NamedPackage.toPackage(p.packageName(), p.module());
     }
@@ -2027,17 +2042,17 @@ public abstract class ClassLoader {
      *         respect to the given code source {@link java.net.URL URL}
      *         object.  Otherwise, the package is not sealed.
      *
-     * @return  The newly defined {@code Package} object
+     * @return The newly defined {@code Package} object
      *
-     * @throws  NullPointerException
+     * @throws NullPointerException
      *          if {@code name} is {@code null}.
      *
-     * @throws  IllegalArgumentException
+     * @throws IllegalArgumentException
      *          if a package of the given {@code name} is already
      *          defined by this class loader
      *
      *
-     * @since  1.2
+     * @since 1.2
      *
      * @jvms 5.3 Creation and Loading
      * @see <a href="{@docRoot}/../specs/jar/jar.html#package-sealing">
@@ -2046,14 +2061,13 @@ public abstract class ClassLoader {
     protected Package definePackage(String name, String specTitle,
                                     String specVersion, String specVendor,
                                     String implTitle, String implVersion,
-                                    String implVendor, URL sealBase)
-    {
+                                    String implVendor, URL sealBase) {
         Objects.requireNonNull(name);
 
         // definePackage is not final and may be overridden by custom class loader
         Package p = new Package(name, specTitle, specVersion, specVendor,
-                                implTitle, implVersion, implVendor,
-                                sealBase, this);
+                implTitle, implVersion, implVendor,
+                sealBase, this);
 
         if (packages.putIfAbsent(name, p) != null)
             throw new IllegalArgumentException(name);
@@ -2070,12 +2084,12 @@ public abstract class ClassLoader {
      * @return The {@code Package} of the given name that has been defined
      *         by this class loader, or {@code null} if not found
      *
-     * @throws  NullPointerException
+     * @throws NullPointerException
      *          if {@code name} is {@code null}.
      *
      * @jvms 5.3 Creation and Loading
      *
-     * @since  9
+     * @since 9
      */
     public final Package getDefinedPackage(String name) {
         Objects.requireNonNull(name, "name cannot be null");
@@ -2101,7 +2115,7 @@ public abstract class ClassLoader {
      *
      * @jvms 5.3 Creation and Loading
      *
-     * @since  9
+     * @since 9
      */
     public final Package[] getDefinedPackages() {
         return packages().toArray(Package[]::new);
@@ -2127,7 +2141,7 @@ public abstract class ClassLoader {
      * @return The {@code Package} of the given name that has been defined by
      *         this class loader or its ancestors, or {@code null} if not found.
      *
-     * @throws  NullPointerException
+     * @throws NullPointerException
      *          if {@code name} is {@code null}.
      *
      * @deprecated
@@ -2145,9 +2159,9 @@ public abstract class ClassLoader {
      *
      * @see ClassLoader#getDefinedPackage(String)
      *
-     * @since  1.2
+     * @since 1.2
      */
-    @Deprecated(since="9")
+    @Deprecated(since = "9")
     protected Package getPackage(String name) {
         Package pkg = getDefinedPackage(name);
         if (pkg == null) {
@@ -2174,12 +2188,12 @@ public abstract class ClassLoader {
      * when invoked on the platform class loader, this method will not
      * return any packages defined to the application class loader.
      *
-     * @return  The array of {@code Package} objects that have been defined by
+     * @return The array of {@code Package} objects that have been defined by
      *          this class loader and its ancestors
      *
      * @see ClassLoader#getDefinedPackages()
      *
-     * @since  1.2
+     * @since 1.2
      */
     protected Package[] getPackages() {
         Stream<Package> pkgs = packages();
@@ -2189,9 +2203,8 @@ public abstract class ClassLoader {
             ld = ld.parent;
         }
         return Stream.concat(BootLoader.packages(), pkgs)
-                     .toArray(Package[]::new);
+                .toArray(Package[]::new);
     }
-
 
 
     // package-private
@@ -2201,7 +2214,7 @@ public abstract class ClassLoader {
      */
     Stream<Package> packages() {
         return packages.values().stream()
-                       .map(p -> definePackage(p.packageName(), p.module()));
+                .map(p -> definePackage(p.packageName(), p.module()));
     }
 
     // -- Native library access --
@@ -2216,12 +2229,12 @@ public abstract class ClassLoader {
      * @param  libname
      *         The library name
      *
-     * @return  The absolute path of the native library
+     * @return The absolute path of the native library
      *
      * @see  System#loadLibrary(String)
      * @see  System#mapLibraryName(String)
      *
-     * @since  1.2
+     * @since 1.2
      */
     protected String findLibrary(String libname) {
         return null;
@@ -2239,6 +2252,7 @@ public abstract class ClassLoader {
         }
         throw new UnsatisfiedLinkError("Can't load library: " + file);
     }
+
     static NativeLibrary loadLibrary(Class<?> fromClass, String name) {
         ClassLoader loader = (fromClass == null) ? null : fromClass.getClassLoader();
         if (loader == null) {
@@ -2341,7 +2355,7 @@ public abstract class ClassLoader {
      *         henceforth have assertions enabled by default, {@code false}
      *         if they will have assertions disabled by default.
      *
-     * @since  1.4
+     * @since 1.4
      */
     public void setDefaultAssertionStatus(boolean enabled) {
         synchronized (assertionLock) {
@@ -2387,7 +2401,7 @@ public abstract class ClassLoader {
      *         have assertions enabled by default, {@code false} if they will
      *         have assertions disabled by default.
      *
-     * @since  1.4
+     * @since 1.4
      */
     public void setPackageAssertionStatus(String packageName,
                                           boolean enabled) {
@@ -2419,7 +2433,7 @@ public abstract class ClassLoader {
      *         enabled when (and if) it is initialized, {@code false} if the
      *         class is to have assertions disabled.
      *
-     * @since  1.4
+     * @since 1.4
      */
     public void setClassAssertionStatus(String className, boolean enabled) {
         synchronized (assertionLock) {
@@ -2437,7 +2451,7 @@ public abstract class ClassLoader {
      * provided so that class loaders can be made to ignore any command line or
      * persistent assertion status settings and "start with a clean slate."
      *
-     * @since  1.4
+     * @since 1.4
      */
     public void clearAssertionStatus() {
         /*
@@ -2465,13 +2479,13 @@ public abstract class ClassLoader {
      *         The fully qualified class name of the class whose desired
      *         assertion status is being queried.
      *
-     * @return  The desired assertion status of the specified class.
+     * @return The desired assertion status of the specified class.
      *
      * @see  #setClassAssertionStatus(String, boolean)
      * @see  #setPackageAssertionStatus(String, boolean)
      * @see  #setDefaultAssertionStatus(boolean)
      *
-     * @since  1.4
+     * @since 1.4
      */
     boolean desiredAssertionStatus(String className) {
         synchronized (assertionLock) {
@@ -2490,12 +2504,12 @@ public abstract class ClassLoader {
                 if (result != null)
                     return result.booleanValue();
             }
-            while(dotIndex > 0) {
+            while (dotIndex > 0) {
                 className = className.substring(0, dotIndex);
                 result = packageAssertionStatus.get(className);
                 if (result != null)
                     return result.booleanValue();
-                dotIndex = className.lastIndexOf('.', dotIndex-1);
+                dotIndex = className.lastIndexOf('.', dotIndex - 1);
             }
 
             // Return the classloader default
@@ -2512,13 +2526,13 @@ public abstract class ClassLoader {
         packageAssertionStatus = new HashMap<>();
         AssertionStatusDirectives directives = retrieveDirectives();
 
-        for(int i = 0; i < directives.classes.length; i++)
+        for (int i = 0; i < directives.classes.length; i++)
             classAssertionStatus.put(directives.classes[i],
-                                     directives.classEnabled[i]);
+                    directives.classEnabled[i]);
 
-        for(int i = 0; i < directives.packages.length; i++)
+        for (int i = 0; i < directives.packages.length; i++)
             packageAssertionStatus.put(directives.packages[i],
-                                       directives.packageEnabled[i]);
+                    directives.packageEnabled[i]);
 
         defaultAssertionStatus = directives.deflt;
     }

@@ -38,7 +38,8 @@ import java.nio.file.attribute.BasicFileAttributes;
  * support for translating resource names to file paths.
  */
 public final class Resources {
-    private Resources() { }
+    private Resources() {
+    }
 
     /**
      * Return true if a resource can be encapsulated. Resource with names
@@ -55,19 +56,24 @@ public final class Resources {
     }
 
     /**
-     * Derive a <em>package name</em> for a resource. The package name
-     * returned by this method may not be a legal package name. This method
-     * returns null if the resource name ends with a "/" (a directory)
-     * or the resource name does not contain a "/".
+     * 根据给定的资源名称推导出对应的 <em>包名</em>。返回的包名可能不是一个合法的包名。
+     * 如果资源名称以 "/" 结尾（表示目录）或者资源名称不包含 "/"，则返回空字符串。
+     * "META-INF/spring.factories" -> "META-INF"
+     * @param name 资源名称，通常是类路径中的文件路径。
+     * @return 返回资源对应的包名。如果资源名以 '/' 结尾或者不包含 '/'，则返回空字符串。
      */
     public static String toPackageName(String name) {
+        // 查找资源名称中最后一个 '/' 的索引位置
         int index = name.lastIndexOf('/');
-        if (index == -1 || index == name.length()-1) {
+        // 如果资源名称中没有 '/'，或者 '/' 是资源名称的最后一个字符（说明是目录），返回空字符串
+        if (index == -1 || index == name.length() - 1) {
             return "";
         } else {
+            // 提取资源路径中的包名部分，并将 '/' 替换为 '.'，形成符合 Java 包命名规则的格式
             return name.substring(0, index).replace('/', '.');
         }
     }
+
 
     /**
      * Returns a resource name corresponding to the relative file path
@@ -77,8 +83,8 @@ public final class Resources {
      */
     public static String toResourceName(Path dir, Path file) {
         String s = dir.relativize(file)
-                      .toString()
-                      .replace(File.separatorChar, '/');
+                .toString()
+                .replace(File.separatorChar, '/');
         if (!s.isEmpty() && Files.isDirectory(file))
             s += "/";
         return s;
@@ -102,9 +108,10 @@ public final class Resources {
                 BasicFileAttributes attrs;
                 attrs = Files.readAttributes(file, BasicFileAttributes.class);
                 if (attrs.isDirectory()
-                    || (!attrs.isDirectory() && !expectDirectory))
+                        || (!attrs.isDirectory() && !expectDirectory))
                     return file;
-            } catch (NoSuchFileException ignore) { }
+            } catch (NoSuchFileException ignore) {
+            }
         }
         return null;
     }
@@ -168,7 +175,7 @@ public final class Resources {
             boolean starsWithDot = (name.charAt(off) == '.');
             if (len == 1 && starsWithDot)
                 return false;
-            if (len == 2 && starsWithDot && (name.charAt(off+1) == '.'))
+            if (len == 2 && starsWithDot && (name.charAt(off + 1) == '.'))
                 return false;
         }
         return true;

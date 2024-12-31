@@ -1058,20 +1058,25 @@ public interface Map<K, V> {
      *         ({@linkplain Collection##optional-restrictions optional})
      * @since 1.8
      */
-    default V computeIfAbsent(K key,
-                              Function<? super K, ? extends V> mappingFunction) {
+    default V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        // 确保 mappingFunction 不为 null，否则抛出 NullPointerException
         Objects.requireNonNull(mappingFunction);
         V v;
+        // 尝试通过 key 获取对应的值，如果不存在，则 v 会为 null
         if ((v = get(key)) == null) {
             V newValue;
+            // 如果值为 null，则调用 mappingFunction 生成新的值
             if ((newValue = mappingFunction.apply(key)) != null) {
+                // 将生成的新值放入 map 中，关联到 key
                 put(key, newValue);
+                // 返回新生成的值
                 return newValue;
             }
         }
-
+        // 如果值 v 不为 null，直接返回该值
         return v;
     }
+
 
     /**
      * If the value for the specified key is present and non-null, attempts to

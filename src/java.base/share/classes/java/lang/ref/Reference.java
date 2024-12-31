@@ -358,12 +358,9 @@ public abstract sealed class Reference<T>
     }
 
     /**
-     * Tests if the referent of this reference object is {@code obj}.
-     * Using a {@code null} {@code obj} returns {@code true} if the
-     * reference object has been cleared.
-     *
-     * @param  obj the object to compare with this reference object's referent
-     * @return {@code true} if {@code obj} is the referent of this reference object
+     * 如果  {@code obj} 为 null, 判断当前引用指向的对象是否被垃圾回收了
+     * 如果  {@code obj} 不为 null, 判断当前引用指向的对象是否是obj
+     * @return 如果 {@code obj} 是此引用对象的引用对象，则返回 {@code true}
      * @since 16
      */
     public final boolean refersTo(T obj) {

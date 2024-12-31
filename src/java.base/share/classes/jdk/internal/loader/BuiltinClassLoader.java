@@ -421,51 +421,68 @@ public class BuiltinClassLoader
     }
 
     /**
-     * Returns the list of URLs to a "miscellaneous" resource in modules
-     * defined to this loader. A miscellaneous resource is not in a module
-     * package, e.g. META-INF/services/p.S.
+     * 返回与模块相关的“杂项”资源的 URL 列表。
+     * “杂项资源”指的是不属于任何模块包中的资源，例如：META-INF/services/p.S。
      *
-     * The cache used by this method avoids repeated searching of all modules.
+     * 此方法使用缓存避免对所有模块的重复搜索。
+     *
+     * @param name 资源名称，如 META-INF/services/p.S。
+     * @return 资源的 URL 列表。
+     * @throws IOException 如果查找资源过程中发生 I/O 错误。
      */
     private List<URL> findMiscResource(String name) throws IOException {
+        // 获取缓存的 SoftReference 对象，SoftReference 是一种用于缓存的引用类型，当内存不足时，它可以被垃圾回收
         SoftReference<Map<String, List<URL>>> ref = this.resourceCache;
+
+        // 获取缓存的资源映射表，如果缓存为空，则为 null
         Map<String, List<URL>> map = (ref != null) ? ref.get() : null;
+
+        // 如果缓存为空，则创建一个新的缓存，并将其赋值给资源缓存字段
         if (map == null) {
-            // only cache resources after VM is fully initialized
+            // 只有在 VM 完全初始化后才会缓存资源
             if (VM.isModuleSystemInited()) {
+                // 使用 ConcurrentHashMap 来存储资源，这是一种线程安全的映射表
                 map = new ConcurrentHashMap<>();
+                // 将新的映射表包装成 SoftReference，并设置为缓存
                 this.resourceCache = new SoftReference<>(map);
             }
         } else {
+            // 如果缓存不为空，尝试从缓存中获取该资源名称对应的 URL 列表
             List<URL> urls = map.get(name);
+            // 如果缓存中已有该资源，直接返回
             if (urls != null)
                 return urls;
         }
-
-        // search all modules for the resource
+        // 如果缓存中没有资源，开始在所有模块中查找该资源
         List<URL> urls = null;
+        // 遍历所有的模块，查找资源
         for (ModuleReference mref : nameToModule.values()) {
+            // 使用模块的 reader 查找资源的 URI（统一资源标识符）
             URI u = moduleReaderFor(mref).find(name).orElse(null);
+            // 如果找到了资源，则将其转换为 URL 并加入列表
             if (u != null) {
                 try {
                     if (urls == null)
                         urls = new ArrayList<>();
-                    urls.add(u.toURL());
+                    urls.add(u.toURL());  // 将 URI 转换为 URL 并加入资源列表
                 } catch (MalformedURLException | IllegalArgumentException e) {
+                    // 如果 URL 转换过程中发生异常，捕获并忽略
                 }
             }
         }
+        // 如果没有找到任何 URL，则返回一个空的列表
         if (urls == null) {
             urls = List.of();
         }
 
-        // only cache resources after VM is fully initialized
+        // 如果有有效的缓存映射表，缓存当前资源的 URL 列表
         if (map != null) {
-            map.putIfAbsent(name, urls);
+            map.putIfAbsent(name, urls);  // 如果缓存中没有该资源，才放入缓存
         }
 
-        return urls;
+        return urls;  // 返回找到的资源 URL 列表
     }
+
 
     /**
      * Returns the URL to a resource in a module or {@code null} if not found.

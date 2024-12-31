@@ -274,8 +274,7 @@ public class Thread implements Runnable {
     private final FieldHolder holder;
 
     /*
-     * ThreadLocal values pertaining to this thread. This map is maintained
-     * by the ThreadLocal class.
+     * 与当前线程相关的 ThreadLocal 值。该映射由 ThreadLocal 类维护。
      */
     ThreadLocal.ThreadLocalMap threadLocals;
 

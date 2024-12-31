@@ -82,14 +82,10 @@ public class ThreadLocal<T> {
     private static final boolean TRACE_VTHREAD_LOCALS = traceVirtualThreadLocals();
 
     /**
-     * ThreadLocals rely on per-thread linear-probe hash maps attached
-     * to each thread (Thread.threadLocals and
-     * inheritableThreadLocals).  The ThreadLocal objects act as keys,
-     * searched via threadLocalHashCode.  This is a custom hash code
-     * (useful only within ThreadLocalMaps) that eliminates collisions
-     * in the common case where consecutively constructed ThreadLocals
-     * are used by the same threads, while remaining well-behaved in
-     * less common cases.
+     * ThreadLocals 依赖于附加到每个线程的每线程线性探测哈希映射（Thread.threadLocals 和 inheritableThreadLocals）。
+     * ThreadLocal 对象充当键，通过 threadLocalHashCode 进行搜索。
+     * 这是一个自定义的哈希码（仅在 ThreadLocalMaps 中有用），它消除了在常见情况下连续构造的 ThreadLocals 被同一线程使用时的哈希冲突，
+     * 同时在不常见的情况下仍然表现良好。
      */
     private final int threadLocalHashCode = nextHashCode();
 
@@ -97,13 +93,11 @@ public class ThreadLocal<T> {
      * The next hash code to be given out. Updated atomically. Starts at
      * zero.
      */
-    private static final AtomicInteger nextHashCode =
-            new AtomicInteger();
+    private static final AtomicInteger nextHashCode = new AtomicInteger();
 
     /**
-     * The difference between successively generated hash codes - turns
-     * implicit sequential thread-local IDs into near-optimally spread
-     * multiplicative hash values for power-of-two-sized tables.
+     * 连续生成的哈希码之间的差异——将隐式的顺序线程局部 ID 转换为接近最优分布的乘法哈希值，
+     * 适用于大小为二的幂的哈希表。
      */
     private static final int HASH_INCREMENT = 0x61c88647;
 
@@ -154,7 +148,7 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Creates a thread local variable.
+     * 创建一个线程局部变量。
      * @see #withInitial(java.util.function.Supplier)
      */
     public ThreadLocal() {
@@ -239,20 +233,20 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Sets the current thread's copy of this thread-local variable
-     * to the specified value.  Most subclasses will have no need to
-     * override this method, relying solely on the {@link #initialValue}
-     * method to set the values of thread-locals.
+     * 将当前线程的线程局部变量的副本设置为指定的值。
+     * 大多数子类无需覆盖此方法，可以仅依赖 {@link #initialValue} 方法来设置线程局部变量的值。
      *
-     * @param value the value to be stored in the current thread's copy of
-     *        this thread-local.
+     * @param value 要存储在当前线程副本中的值
      */
     public void set(T value) {
+        // 调用内部的 set 方法，实际设置当前线程的线程局部变量
         set(Thread.currentThread(), value);
+        // 如果启用了虚拟线程的追踪，并且当前线程是虚拟线程，打印栈追踪
         if (TRACE_VTHREAD_LOCALS && Thread.currentThread().isVirtual()) {
             printStackTrace();
         }
     }
+
 
     void setCarrierThreadLocal(T value) {
         assert this instanceof CarrierThreadLocal<T>;
@@ -296,11 +290,7 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Get the map associated with a ThreadLocal. Overridden in
-     * InheritableThreadLocal.
-     *
-     * @param  t the current thread
-     * @return the map
+     * 获取 线程t 的字段 threadLocals 与 ThreadLocal 关联的映射。 在 InheritableThreadLocal 中被重写。
      */
     ThreadLocalMap getMap(Thread t) {
         return t.threadLocals;
@@ -542,41 +532,45 @@ public class ThreadLocal<T> {
         }
 
         /**
-         * Set the value associated with key.
+         * 设置与指定 key 关联的值。
          *
-         * @param key the thread local object
-         * @param value the value to be set
+         * @param key 线程局部变量对象
+         * @param value 要设置的值
          */
         private void set(ThreadLocal<?> key, Object value) {
+            // 不像 get() 方法那样使用快速路径，因为创建新条目和替换现有条目同样常见。
+            // 如果使用快速路径，往往会失败，因为替换操作频繁发生。
 
-            // We don't use a fast path as with get() because it is at
-            // least as common to use set() to create new entries as
-            // it is to replace existing ones, in which case, a fast
-            // path would fail more often than not.
-
+            // 获取当前线程的本地存储映射（Entry 数组）
             Entry[] tab = table;
             int len = tab.length;
+            // 计算 key 对应的索引位置，使用 key 的 hash code 和数组长度
             int i = key.threadLocalHashCode & (len - 1);
 
-            for (Entry e = tab[i];
-                 e != null;
-                 e = tab[i = nextIndex(i, len)]) {
+            // 遍历该索引位置的链表，查找是否已有该 key 对应的值
+            for (Entry e = tab[i]; e != null; e = tab[i = nextIndex(i, len)]) {
+                // 判断引用e指向的对象是key (key 不为null)
                 if (e.refersTo(key)) {
-                    e.value = value;
+                    e.value = value;  // 更新该 Entry 的值
                     return;
                 }
-
+                // 判断引用e指向的对象被垃圾回收了
                 if (e.refersTo(null)) {
                     replaceStaleEntry(key, value, i);
                     return;
                 }
             }
 
+            // 如果没有找到相应的 key，直接将新的 Entry 插入该位置
             tab[i] = new Entry(key, value);
+
+            // 更新当前大小，并清理多余的槽位，如果超过阈值则扩容
             int sz = ++size;
+            // 如果槽位未清理，且当前大小超过了阈值，进行扩容操作
             if (!cleanSomeSlots(i, sz) && sz >= threshold)
                 rehash();
         }
+
 
         /**
          * Remove the entry for key.
@@ -611,61 +605,58 @@ public class ThreadLocal<T> {
          * @param  staleSlot index of the first stale entry encountered while
          *         searching for key.
          */
-        private void replaceStaleEntry(ThreadLocal<?> key, Object value,
-                                       int staleSlot) {
+        private void replaceStaleEntry(ThreadLocal<?> key, Object value, int staleSlot) {
+            // 获取当前哈希表的引用
             Entry[] tab = table;
-            int len = tab.length;
+            int len = tab.length;  // 哈希表的长度
             Entry e;
 
-            // Back up to check for prior stale entry in current run.
-            // We clean out whole runs at a time to avoid continual
-            // incremental rehashing due to garbage collector freeing
-            // up refs in bunches (i.e., whenever the collector runs).
+            // 回溯检查当前槽位之前是否存在过时条目，清理整个“run”
+            // “run” 是一段连续的条目区间，直到遇到 null 插槽
             int slotToExpunge = staleSlot;
-            for (int i = prevIndex(staleSlot, len);
-                 (e = tab[i]) != null;
-                 i = prevIndex(i, len))
-                if (e.refersTo(null))
+            for (int i = prevIndex(staleSlot, len); (e = tab[i]) != null; i = prevIndex(i, len)) {
+                if (e.refersTo(null)) {
+                    // 如果当前条目已经过时（即其值已经被垃圾回收），更新清理标记
                     slotToExpunge = i;
+                }
+            }
 
-            // Find either the key or trailing null slot of run, whichever
-            // occurs first
-            for (int i = nextIndex(staleSlot, len);
-                 (e = tab[i]) != null;
-                 i = nextIndex(i, len)) {
-                // If we find key, then we need to swap it
-                // with the stale entry to maintain hash table order.
-                // The newly stale slot, or any other stale slot
-                // encountered above it, can then be sent to expungeStaleEntry
-                // to remove or rehash all of the other entries in run.
+            // 从 staleSlot 开始向前遍历，查找目标 key 或遇到 null 插槽
+            for (int i = nextIndex(staleSlot, len); (e = tab[i]) != null; i = nextIndex(i, len)) {
+                // 如果找到与 key 匹配的条目
                 if (e.refersTo(key)) {
+                    // 更新条目的值
                     e.value = value;
 
+                    // 交换当前找到的条目和 staleSlot 位置上的条目，以保持哈希表顺序
                     tab[i] = tab[staleSlot];
                     tab[staleSlot] = e;
 
-                    // Start expunge at preceding stale entry if it exists
-                    if (slotToExpunge == staleSlot)
+                    // 如果有过时条目，则从当前位置开始清理
+                    if (slotToExpunge == staleSlot) {
                         slotToExpunge = i;
+                    }
+                    // 清理过时条目
                     cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
                     return;
                 }
 
-                // If we didn't find stale entry on backward scan, the
-                // first stale entry seen while scanning for key is the
-                // first still present in the run.
-                if (e.refersTo(null) && slotToExpunge == staleSlot)
+                // 如果没有找到过时条目，继续向前遍历，寻找第一个过时条目
+                if (e.refersTo(null) && slotToExpunge == staleSlot) {
                     slotToExpunge = i;
+                }
             }
 
-            // If key not found, put new entry in stale slot
-            tab[staleSlot].value = null;
-            tab[staleSlot] = new Entry(key, value);
+            // 如果在表中没有找到与 key 匹配的条目，将新条目放入 staleSlot 中
+            tab[staleSlot].value = null;  // 清空原来的值
+            tab[staleSlot] = new Entry(key, value);  // 插入新条目
 
-            // If there are any other stale entries in run, expunge them
-            if (slotToExpunge != staleSlot)
+            // 如果还有其他过时条目，清理它们
+            if (slotToExpunge != staleSlot) {
                 cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+            }
         }
+
 
         /**
          * Expunge a stale entry by rehashing any possibly colliding entries
