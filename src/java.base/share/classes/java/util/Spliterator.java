@@ -295,19 +295,15 @@ import java.util.function.LongConsumer;
  */
 public interface Spliterator<T> {
     /**
-     * If a remaining element exists: performs the given action on it,
-     * returning {@code true}; else returns {@code false}.  If this
-     * Spliterator is {@link #ORDERED} the action is performed on the
-     * next element in encounter order.  Exceptions thrown by the
-     * action are relayed to the caller.
+     * 如果存在剩余元素：对其执行给定的操作，并返回 {@code true}；
+     * 否则返回 {@code false}。如果此 Spliterator 是 {@link #ORDERED}，
+     * 操作会按遇到的顺序对下一个元素执行。操作抛出的异常会传递给调用者。
      * <p>
-     * Subsequent behavior of a spliterator is unspecified if the action throws
-     * an exception.
+     * 如果操作抛出异常，之后 Spliterator 的行为是未指定的。
      *
-     * @param action The action whose operation is performed at-most once
-     * @return {@code false} if no remaining elements existed
-     * upon entry to this method, else {@code true}.
-     * @throws NullPointerException if the specified action is null
+     * @param action 需要执行的操作，最多执行一次
+     * @return 如果进入此方法时没有剩余元素，则返回 {@code false}；否则返回 {@code true}。
+     * @throws NullPointerException 如果指定的操作为 null
      */
     boolean tryAdvance(Consumer<? super T> action);
 
@@ -333,70 +329,47 @@ public interface Spliterator<T> {
     }
 
     /**
-     * If this spliterator can be partitioned, returns a Spliterator
-     * covering elements, that will, upon return from this method, not
-     * be covered by this Spliterator.
+     * 如果这个 Spliterator 可以被分割，返回一个覆盖某些元素的 Spliterator，
+     * 在此方法返回后，这些元素将不再由当前的 Spliterator 覆盖。
      *
-     * <p>If this Spliterator is {@link #ORDERED}, the returned Spliterator
-     * must cover a strict prefix of the elements.
+     * <p>如果这个 Spliterator 是 {@link #ORDERED}，则返回的 Spliterator
+     * 必须覆盖元素的严格前缀。
      *
-     * <p>Unless this Spliterator covers an infinite number of elements,
-     * repeated calls to {@code trySplit()} must eventually return {@code null}.
-     * Upon non-null return:
+     * <p>除非这个 Spliterator 覆盖了无限数量的元素，
+     * 否则对 {@code trySplit()} 的重复调用最终必须返回 {@code null}。
+     * 如果返回非 null 值：
      * <ul>
-     * <li>the value reported for {@code estimateSize()} before splitting,
-     * must, after splitting, be greater than or equal to {@code estimateSize()}
-     * for this and the returned Spliterator; and</li>
-     * <li>if this Spliterator is {@code SUBSIZED}, then {@code estimateSize()}
-     * for this spliterator before splitting must be equal to the sum of
-     * {@code estimateSize()} for this and the returned Spliterator after
-     * splitting.</li>
+     * <li>在分割之前报告的 {@code estimateSize()} 值，
+     * 在分割之后，必须大于或等于分割前后当前 Spliterator 和返回的 Spliterator 的 {@code estimateSize()}；并且</li>
+     * <li>如果这个 Spliterator 是 {@code SUBSIZED}，则分割前当前 Spliterator 的 {@code estimateSize()} 必须等于分割后当前 Spliterator 和返回的 Spliterator 的 {@code estimateSize()} 之和。</li>
      * </ul>
      *
-     * <p>This method may return {@code null} for any reason,
-     * including emptiness, inability to split after traversal has
-     * commenced, data structure constraints, and efficiency
-     * considerations.
+     * <p>此方法可能会返回 {@code null}，原因可以包括：为空、遍历开始后无法再分割、数据结构约束以及效率考虑等。
      *
      * @apiNote
-     * An ideal {@code trySplit} method efficiently (without
-     * traversal) divides its elements exactly in half, allowing
-     * balanced parallel computation.  Many departures from this ideal
-     * remain highly effective; for example, only approximately
-     * splitting an approximately balanced tree, or for a tree in
-     * which leaf nodes may contain either one or two elements,
-     * failing to further split these nodes.  However, large
-     * deviations in balance and/or overly inefficient {@code
-     * trySplit} mechanics typically result in poor parallel
-     * performance.
+     * 理想的 {@code trySplit} 方法能高效地（无需遍历）将元素平均分割，从而实现平衡的并行计算。
+     * 虽然许多偏离这一理想的方法依然非常有效，例如，只是近似地分割一个近乎平衡的树，或者对于一个树，
+     * 其中叶节点可能包含一个或两个元素，无法进一步分割这些节点。然而，过大的不平衡或过于低效的 {@code trySplit} 机制
+     * 通常会导致较差的并行性能。
      *
-     * @return a {@code Spliterator} covering some portion of the
-     * elements, or {@code null} if this spliterator cannot be split
+     * @return 一个覆盖部分元素的 {@code Spliterator}，如果这个 spliterator 无法分割，则返回 {@code null}
      */
     Spliterator<T> trySplit();
 
     /**
-     * Returns an estimate of the number of elements that would be
-     * encountered by a {@link #forEachRemaining} traversal, or returns {@link
-     * Long#MAX_VALUE} if infinite, unknown, or too expensive to compute.
+     * 返回 {@link #forEachRemaining} 遍历过程中将遇到的元素数量的估计值，
+     * 如果元素数量是无限的、未知的，或计算成本过高，则返回 {@link Long#MAX_VALUE}。
      *
-     * <p>If this Spliterator is {@link #SIZED} and has not yet been partially
-     * traversed or split, or this Spliterator is {@link #SUBSIZED} and has
-     * not yet been partially traversed, this estimate must be an accurate
-     * count of elements that would be encountered by a complete traversal.
-     * Otherwise, this estimate may be arbitrarily inaccurate, but must decrease
-     * as specified across invocations of {@link #trySplit}.
+     * <p>如果这个 Spliterator 是 {@link #SIZED} 且尚未被部分遍历或分割，或者这个 Spliterator 是
+     * {@link #SUBSIZED} 且尚未被部分遍历，则该估计值必须准确地反映通过完整遍历将遇到的元素数量。
+     * 否则，估计值可能不准确，但在多次调用 {@link #trySplit} 时，估计值必须逐步减小。
      *
      * @apiNote
-     * Even an inexact estimate is often useful and inexpensive to compute.
-     * For example, a sub-spliterator of an approximately balanced binary tree
-     * may return a value that estimates the number of elements to be half of
-     * that of its parent; if the root Spliterator does not maintain an
-     * accurate count, it could estimate size to be the power of two
-     * corresponding to its maximum depth.
+     * 即使是不准确的估计通常也很有用且计算成本低。例如，一个大致平衡的二叉树的子 Spliterator
+     * 可能返回一个估计值，表示其元素数量是其父 Spliterator 元素数量的一半；如果根 Spliterator
+     * 不维护准确的计数，它可能会估计为与其最大深度对应的 2 的幂。
      *
-     * @return the estimated size, or {@code Long.MAX_VALUE} if infinite,
-     *         unknown, or too expensive to compute.
+     * @return 估计的大小，如果元素数量是无限的、未知的，或者计算成本过高，则返回 {@code Long.MAX_VALUE}。
      */
     long estimateSize();
 
@@ -415,25 +388,19 @@ public interface Spliterator<T> {
     }
 
     /**
-     * Returns a set of characteristics of this Spliterator and its
-     * elements. The result is represented as ORed values from {@link
-     * #ORDERED}, {@link #DISTINCT}, {@link #SORTED}, {@link #SIZED},
-     * {@link #NONNULL}, {@link #IMMUTABLE}, {@link #CONCURRENT},
-     * {@link #SUBSIZED}.  Repeated calls to {@code characteristics()} on
-     * a given spliterator, prior to or in-between calls to {@code trySplit},
-     * should always return the same result.
+     * 返回此 Spliterator 及其元素的特征集合。结果是通过按位或操作
+     * 将 {@link #ORDERED}、{@link #DISTINCT}、{@link #SORTED}、{@link #SIZED}、
+     * {@link #NONNULL}、{@link #IMMUTABLE}、{@link #CONCURRENT}、{@link #SUBSIZED} 的值组合得到的。
+     * 在对给定的 spliterator 调用 {@code characteristics()} 方法之前或在多次调用 {@code trySplit} 之间，
+     * 重复调用应始终返回相同的结果。
      *
-     * <p>If a Spliterator reports an inconsistent set of
-     * characteristics (either those returned from a single invocation
-     * or across multiple invocations), no guarantees can be made
-     * about any computation using this Spliterator.
+     * <p>如果一个 Spliterator 报告了不一致的特征集合（无论是单次调用返回的，还是多次调用之间的返回），
+     * 那么无法对使用该 Spliterator 进行的任何计算做出保证。
      *
-     * @apiNote The characteristics of a given spliterator before splitting
-     * may differ from the characteristics after splitting.  For specific
-     * examples see the characteristic values {@link #SIZED}, {@link #SUBSIZED}
-     * and {@link #CONCURRENT}.
+     * @apiNote 给定 Spliterator 在分割之前的特征可能与分割之后的特征不同。
+     * 对于具体示例，请参见特征值 {@link #SIZED}、{@link #SUBSIZED} 和 {@link #CONCURRENT}。
      *
-     * @return a representation of characteristics
+     * @return 特征的表示
      */
     int characteristics();
 

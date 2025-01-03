@@ -41,7 +41,8 @@ import java.util.function.LongConsumer;
 public final class Spliterators {
 
     // Suppresses default constructor, ensuring non-instantiability.
-    private Spliterators() {}
+    private Spliterators() {
+    }
 
     // Empty spliterators
 
@@ -128,7 +129,7 @@ public final class Spliterators {
     public static <T> Spliterator<T> spliterator(Object[] array,
                                                  int additionalCharacteristics) {
         return new ArraySpliterator<>(Objects.requireNonNull(array),
-                                      additionalCharacteristics);
+                additionalCharacteristics);
     }
 
     /**
@@ -403,10 +404,8 @@ public final class Spliterators {
      * @return A spliterator from an iterator
      * @throws NullPointerException if the given collection is {@code null}
      */
-    public static <T> Spliterator<T> spliterator(Collection<? extends T> c,
-                                                 int characteristics) {
-        return new IteratorSpliterator<>(Objects.requireNonNull(c),
-                                         characteristics);
+    public static <T> Spliterator<T> spliterator(Collection<? extends T> c, int characteristics) {
+        return new IteratorSpliterator<>(Objects.requireNonNull(c), characteristics);
     }
 
     /**
@@ -437,7 +436,7 @@ public final class Spliterators {
                                                  long size,
                                                  int characteristics) {
         return new IteratorSpliterator<>(Objects.requireNonNull(iterator), size,
-                                         characteristics);
+                characteristics);
     }
 
     /**
@@ -494,7 +493,7 @@ public final class Spliterators {
                                                 long size,
                                                 int characteristics) {
         return new IntIteratorSpliterator(Objects.requireNonNull(iterator),
-                                          size, characteristics);
+                size, characteristics);
     }
 
     /**
@@ -551,7 +550,7 @@ public final class Spliterators {
                                                  long size,
                                                  int characteristics) {
         return new LongIteratorSpliterator(Objects.requireNonNull(iterator),
-                                           size, characteristics);
+                size, characteristics);
     }
 
     /**
@@ -608,7 +607,7 @@ public final class Spliterators {
                                                    long size,
                                                    int characteristics) {
         return new DoubleIteratorSpliterator(Objects.requireNonNull(iterator),
-                                             size, characteristics);
+                size, characteristics);
     }
 
     /**
@@ -651,7 +650,7 @@ public final class Spliterators {
      * @return An iterator
      * @throws NullPointerException if the given spliterator is {@code null}
      */
-    public static<T> Iterator<T> iterator(Spliterator<? extends T> spliterator) {
+    public static <T> Iterator<T> iterator(Spliterator<? extends T> spliterator) {
         Objects.requireNonNull(spliterator);
         class Adapter implements Iterator<T>, Consumer<T> {
             boolean valueReady = false;
@@ -867,7 +866,8 @@ public final class Spliterators {
 
     private abstract static class EmptySpliterator<T, S extends Spliterator<T>, C> {
 
-        EmptySpliterator() { }
+        EmptySpliterator() {
+        }
 
         public S trySplit() {
             return null;
@@ -896,7 +896,8 @@ public final class Spliterators {
             static final Spliterator<Object> EMPTY_SPLITERATOR =
                     new EmptySpliterator.OfRef<>();
 
-            private OfRef() { }
+            private OfRef() {
+            }
         }
 
         @SuppressWarnings("overloads")
@@ -906,7 +907,8 @@ public final class Spliterators {
             static final Spliterator.OfInt EMPTY_INT_SPLITERATOR =
                     new EmptySpliterator.OfInt();
 
-            private OfInt() { }
+            private OfInt() {
+            }
         }
 
         @SuppressWarnings("overloads")
@@ -916,7 +918,8 @@ public final class Spliterators {
             static final Spliterator.OfLong EMPTY_LONG_SPLITERATOR =
                     new EmptySpliterator.OfLong();
 
-            private OfLong() { }
+            private OfLong() {
+            }
         }
 
         @SuppressWarnings("overloads")
@@ -926,7 +929,8 @@ public final class Spliterators {
             static final Spliterator.OfDouble EMPTY_DOUBLE_SPLITERATOR =
                     new EmptySpliterator.OfDouble();
 
-            private OfDouble() { }
+            private OfDouble() {
+            }
         }
     }
 
@@ -949,7 +953,7 @@ public final class Spliterators {
         private final int fence;  // one past last index
         private final int characteristics;
         private long estimatedSize; // if >= 0, the estimated size, to help to split evenly
-                                    // if -1, exact size is known to be fence - index
+        // if -1, exact size is known to be fence - index
 
         /**
          * Creates a spliterator covering all of the given array.
@@ -1016,12 +1020,15 @@ public final class Spliterators {
         @SuppressWarnings("unchecked")
         @Override
         public void forEachRemaining(Consumer<? super T> action) {
-            Object[] a; int i, hi; // hoist accesses and checks from loop
+            Object[] a;
+            int i, hi; // hoist accesses and checks from loop
             if (action == null)
                 throw new NullPointerException();
             if ((a = array).length >= (hi = fence) &&
-                (i = index) >= 0 && i < (index = hi)) {
-                do { action.accept((T)a[i]); } while (++i < hi);
+                    (i = index) >= 0 && i < (index = hi)) {
+                do {
+                    action.accept((T) a[i]);
+                } while (++i < hi);
             }
         }
 
@@ -1039,7 +1046,7 @@ public final class Spliterators {
 
         @Override
         public long estimateSize() {
-            return estimatedSize >= 0 ? estimatedSize : (long)(fence - index);
+            return estimatedSize >= 0 ? estimatedSize : (long) (fence - index);
         }
 
         @Override
@@ -1116,12 +1123,15 @@ public final class Spliterators {
 
         @Override
         public void forEachRemaining(IntConsumer action) {
-            int[] a; int i, hi; // hoist accesses and checks from loop
+            int[] a;
+            int i, hi; // hoist accesses and checks from loop
             if (action == null)
                 throw new NullPointerException();
             if ((a = array).length >= (hi = fence) &&
-                (i = index) >= 0 && i < (index = hi)) {
-                do { action.accept(a[i]); } while (++i < hi);
+                    (i = index) >= 0 && i < (index = hi)) {
+                do {
+                    action.accept(a[i]);
+                } while (++i < hi);
             }
         }
 
@@ -1138,7 +1148,7 @@ public final class Spliterators {
 
         @Override
         public long estimateSize() {
-            return estimatedSize >= 0 ? estimatedSize : (long)(fence - index);
+            return estimatedSize >= 0 ? estimatedSize : (long) (fence - index);
         }
 
         @Override
@@ -1215,12 +1225,15 @@ public final class Spliterators {
 
         @Override
         public void forEachRemaining(LongConsumer action) {
-            long[] a; int i, hi; // hoist accesses and checks from loop
+            long[] a;
+            int i, hi; // hoist accesses and checks from loop
             if (action == null)
                 throw new NullPointerException();
             if ((a = array).length >= (hi = fence) &&
-                (i = index) >= 0 && i < (index = hi)) {
-                do { action.accept(a[i]); } while (++i < hi);
+                    (i = index) >= 0 && i < (index = hi)) {
+                do {
+                    action.accept(a[i]);
+                } while (++i < hi);
             }
         }
 
@@ -1237,7 +1250,7 @@ public final class Spliterators {
 
         @Override
         public long estimateSize() {
-            return estimatedSize >= 0 ? estimatedSize : (long)(fence - index);
+            return estimatedSize >= 0 ? estimatedSize : (long) (fence - index);
         }
 
         @Override
@@ -1314,12 +1327,15 @@ public final class Spliterators {
 
         @Override
         public void forEachRemaining(DoubleConsumer action) {
-            double[] a; int i, hi; // hoist accesses and checks from loop
+            double[] a;
+            int i, hi; // hoist accesses and checks from loop
             if (action == null)
                 throw new NullPointerException();
             if ((a = array).length >= (hi = fence) &&
-                (i = index) >= 0 && i < (index = hi)) {
-                do { action.accept(a[i]); } while (++i < hi);
+                    (i = index) >= 0 && i < (index = hi)) {
+                do {
+                    action.accept(a[i]);
+                } while (++i < hi);
             }
         }
 
@@ -1336,7 +1352,7 @@ public final class Spliterators {
 
         @Override
         public long estimateSize() {
-            return estimatedSize >= 0 ? estimatedSize : (long)(fence - index);
+            return estimatedSize >= 0 ? estimatedSize : (long) (fence - index);
         }
 
         @Override
@@ -1401,8 +1417,8 @@ public final class Spliterators {
         protected AbstractSpliterator(long est, int additionalCharacteristics) {
             this.est = est;
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
-                                   ? additionalCharacteristics | Spliterator.SUBSIZED
-                                   : additionalCharacteristics;
+                    ? additionalCharacteristics | Spliterator.SUBSIZED
+                    : additionalCharacteristics;
         }
 
         static final class HoldingConsumer<T> implements Consumer<T> {
@@ -1444,7 +1460,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 Object[] a = new Object[n];
                 int j = 0;
-                do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
+                do {
+                    a[j] = holder.value;
+                } while (++j < n && tryAdvance(holder));
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -1526,8 +1544,8 @@ public final class Spliterators {
         protected AbstractIntSpliterator(long est, int additionalCharacteristics) {
             this.est = est;
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
-                                   ? additionalCharacteristics | Spliterator.SUBSIZED
-                                   : additionalCharacteristics;
+                    ? additionalCharacteristics | Spliterator.SUBSIZED
+                    : additionalCharacteristics;
         }
 
         static final class HoldingIntConsumer implements IntConsumer {
@@ -1556,7 +1574,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 int[] a = new int[n];
                 int j = 0;
-                do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
+                do {
+                    a[j] = holder.value;
+                } while (++j < n && tryAdvance(holder));
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -1638,8 +1658,8 @@ public final class Spliterators {
         protected AbstractLongSpliterator(long est, int additionalCharacteristics) {
             this.est = est;
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
-                                   ? additionalCharacteristics | Spliterator.SUBSIZED
-                                   : additionalCharacteristics;
+                    ? additionalCharacteristics | Spliterator.SUBSIZED
+                    : additionalCharacteristics;
         }
 
         static final class HoldingLongConsumer implements LongConsumer {
@@ -1668,7 +1688,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 long[] a = new long[n];
                 int j = 0;
-                do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
+                do {
+                    a[j] = holder.value;
+                } while (++j < n && tryAdvance(holder));
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -1750,8 +1772,8 @@ public final class Spliterators {
         protected AbstractDoubleSpliterator(long est, int additionalCharacteristics) {
             this.est = est;
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
-                                   ? additionalCharacteristics | Spliterator.SUBSIZED
-                                   : additionalCharacteristics;
+                    ? additionalCharacteristics | Spliterator.SUBSIZED
+                    : additionalCharacteristics;
         }
 
         static final class HoldingDoubleConsumer implements DoubleConsumer {
@@ -1780,7 +1802,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 double[] a = new double[n];
                 int j = 0;
-                do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
+                do {
+                    a[j] = holder.value;
+                } while (++j < n && tryAdvance(holder));
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -1820,125 +1844,127 @@ public final class Spliterators {
     // Iterator-based Spliterators
 
     /**
-     * A Spliterator using a given Iterator for element
-     * operations. The spliterator implements {@code trySplit} to
-     * permit limited parallelism.
+     * 使用给定的 Iterator 进行元素操作的 Spliterator。
+     * 该 Spliterator 实现了 {@code trySplit}，允许有限的并行性。
      */
     static class IteratorSpliterator<T> implements Spliterator<T> {
-        static final int BATCH_UNIT = 1 << 10;  // batch array size increment
-        static final int MAX_BATCH = 1 << 25;  // max batch array size;
-        private final Collection<? extends T> collection; // null OK
-        private Iterator<? extends T> it;
-        private final int characteristics;
-        private long est;             // size estimate
-        private int batch;            // batch size for splits
+        // 批处理单位大小，用于分割
+        static final int BATCH_UNIT = 1 << 10;  // 批量数组大小递增
+        // 最大批处理大小
+        static final int MAX_BATCH = 1 << 25;  // 最大批量数组大小
+
+        private final Collection<? extends T> collection; // 存储源集合（允许为 null）
+        private Iterator<? extends T> it; // 当前迭代器
+        private final int characteristics; // 特征值
+        private long est;  // 大小估计值
+        private int batch; // 分割时的批次大小
 
         /**
-         * Creates a spliterator using the given
-         * collection's {@link java.util.Collection#iterator() iterator} for traversal,
-         * and reporting its {@link java.util.Collection#size() size} as its initial
-         * size.
+         * 使用给定集合的 {@link java.util.Collection#iterator() iterator} 创建一个 Spliterator，
+         * 并将集合的 {@link java.util.Collection#size() size} 作为初始大小报告。
          *
-         * @param collection the collection
-         * @param characteristics properties of this spliterator's
-         *        source or elements.
+         * @param collection 源集合
+         * @param characteristics 此 Spliterator 的特性
          */
         public IteratorSpliterator(Collection<? extends T> collection, int characteristics) {
             this.collection = collection;
-            this.it = null;
+            this.it = null; // 初始化时迭代器为 null
             this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
-                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
-                                   : characteristics;
+                    ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                    : characteristics;
         }
 
         /**
-         * Creates a spliterator using the given iterator
-         * for traversal, and reporting the given initial size
-         * and characteristics.
+         * 使用给定的迭代器创建一个 Spliterator，报告给定的初始大小和特性。
          *
-         * @param iterator the iterator for the source
-         * @param size the number of elements in the source
-         * @param characteristics properties of this spliterator's
-         * source or elements.
+         * @param iterator 迭代器
+         * @param size 初始大小（元素数量）
+         * @param characteristics 此 Spliterator 的特性
          */
         public IteratorSpliterator(Iterator<? extends T> iterator, long size, int characteristics) {
-            this.collection = null;
+            this.collection = null; // 集合为 null
             this.it = iterator;
-            this.est = size;
+            this.est = size; // 设置估计大小
             this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
-                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
-                                   : characteristics;
+                    ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                    : characteristics;
         }
 
         /**
-         * Creates a spliterator using the given iterator
-         * for traversal, and reporting the given initial size
-         * and characteristics.
+         * 使用给定的迭代器创建一个 Spliterator，报告给定的特性。
          *
-         * @param iterator the iterator for the source
-         * @param characteristics properties of this spliterator's
-         * source or elements.
+         * @param iterator 迭代器
+         * @param characteristics 此 Spliterator 的特性
          */
         public IteratorSpliterator(Iterator<? extends T> iterator, int characteristics) {
             this.collection = null;
             this.it = iterator;
-            this.est = Long.MAX_VALUE;
-            this.characteristics = characteristics & ~(Spliterator.SIZED | Spliterator.SUBSIZED);
+            this.est = Long.MAX_VALUE; // 默认大小为无限
+            this.characteristics = characteristics & ~(Spliterator.SIZED | Spliterator.SUBSIZED); // 不报告大小特性
         }
 
+        /**
+         * 尝试将 Spliterator 拆分为更小的部分（支持并行处理）。
+         *
+         * <p>这个方法将元素分割成递增的批处理大小。如果分割成功，返回一个新的 Spliterator；如果无法分割，返回 null。
+         * </p>
+         *
+         * @return 一个新的 Spliterator 或 null（如果无法分割）
+         */
         @Override
         public Spliterator<T> trySplit() {
-            /*
-             * Split into arrays of arithmetically increasing batch
-             * sizes.  This will only improve parallel performance if
-             * per-element Consumer actions are more costly than
-             * transferring them into an array.  The use of an
-             * arithmetic progression in split sizes provides overhead
-             * vs parallelism bounds that do not particularly favor or
-             * penalize cases of lightweight vs heavyweight element
-             * operations, across combinations of #elements vs #cores,
-             * whether or not either are known.  We generate
-             * O(sqrt(#elements)) splits, allowing O(sqrt(#cores))
-             * potential speedup.
-             */
             Iterator<? extends T> i;
             long s;
             if ((i = it) == null) {
                 i = it = collection.iterator();
                 s = est = (long) collection.size();
-            }
-            else
+            } else {
                 s = est;
+            }
+
             if (s > 1 && i.hasNext()) {
-                int n = batch + BATCH_UNIT;
-                if (n > s)
-                    n = (int) s;
-                if (n > MAX_BATCH)
-                    n = MAX_BATCH;
+                int n = batch + BATCH_UNIT; // 每次批量递增
+                if (n > s) n = (int) s;
+                if (n > MAX_BATCH) n = MAX_BATCH;
+
                 Object[] a = new Object[n];
                 int j = 0;
-                do { a[j] = i.next(); } while (++j < n && i.hasNext());
-                batch = j;
+                do {
+                    a[j] = i.next(); // 填充当前批次
+                } while (++j < n && i.hasNext());
+
+                batch = j; // 更新批次大小
                 if (est != Long.MAX_VALUE) {
                     est -= j;
-                    return new ArraySpliterator<>(a, 0, j, characteristics);
+                    return new ArraySpliterator<>(a, 0, j, characteristics); // 返回新的 Spliterator
                 }
                 return new ArraySpliterator<>(a, 0, j, characteristics, Long.MAX_VALUE / 2);
             }
-            return null;
+            return null; // 无法分割
         }
 
+        /**
+         * 对剩余的所有元素执行给定的操作。
+         *
+         * @param action 要执行的操作
+         */
         @Override
         public void forEachRemaining(Consumer<? super T> action) {
             if (action == null) throw new NullPointerException();
             Iterator<? extends T> i;
             if ((i = it) == null) {
                 i = it = collection.iterator();
-                est = (long)collection.size();
+                est = (long) collection.size();
             }
-            i.forEachRemaining(action);
+            i.forEachRemaining(action); // 执行给定的操作
         }
 
+        /**
+         * 尝试对下一个元素执行给定的操作。
+         *
+         * @param action 要执行的操作
+         * @return 如果元素存在并成功执行操作，则返回 true，否则返回 false
+         */
         @Override
         public boolean tryAdvance(Consumer<? super T> action) {
             if (action == null) throw new NullPointerException();
@@ -1947,24 +1973,42 @@ public final class Spliterators {
                 est = (long) collection.size();
             }
             if (it.hasNext()) {
-                action.accept(it.next());
+                action.accept(it.next()); // 执行操作
                 return true;
             }
             return false;
         }
 
+        /**
+         * 返回此 Spliterator 的估计大小。
+         *
+         * @return 估计大小
+         */
         @Override
         public long estimateSize() {
             if (it == null) {
                 it = collection.iterator();
-                return est = (long)collection.size();
+                return est = (long) collection.size();
             }
             return est;
         }
 
+        /**
+         * 返回此 Spliterator 的特性值。
+         *
+         * @return 特性值
+         */
         @Override
-        public int characteristics() { return characteristics; }
+        public int characteristics() {
+            return characteristics;
+        }
 
+        /**
+         * 返回此 Spliterator 的比较器（如果 Spliterator 被标记为已排序）。
+         *
+         * @return 比较器
+         * @throws IllegalStateException 如果 Spliterator 不是已排序的
+         */
         @Override
         public Comparator<? super T> getComparator() {
             if (hasCharacteristics(Spliterator.SORTED))
@@ -1972,6 +2016,7 @@ public final class Spliterators {
             throw new IllegalStateException();
         }
     }
+
 
     /**
      * A Spliterator.OfInt using a given IntStream.IntIterator for element
@@ -2000,8 +2045,8 @@ public final class Spliterators {
             this.it = iterator;
             this.est = size;
             this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
-                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
-                                   : characteristics;
+                    ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                    : characteristics;
         }
 
         /**
@@ -2031,7 +2076,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 int[] a = new int[n];
                 int j = 0;
-                do { a[j] = i.nextInt(); } while (++j < n && i.hasNext());
+                do {
+                    a[j] = i.nextInt();
+                } while (++j < n && i.hasNext());
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -2064,7 +2111,9 @@ public final class Spliterators {
         }
 
         @Override
-        public int characteristics() { return characteristics; }
+        public int characteristics() {
+            return characteristics;
+        }
 
         @Override
         public Comparator<? super Integer> getComparator() {
@@ -2096,8 +2145,8 @@ public final class Spliterators {
             this.it = iterator;
             this.est = size;
             this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
-                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
-                                   : characteristics;
+                    ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                    : characteristics;
         }
 
         /**
@@ -2127,7 +2176,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 long[] a = new long[n];
                 int j = 0;
-                do { a[j] = i.nextLong(); } while (++j < n && i.hasNext());
+                do {
+                    a[j] = i.nextLong();
+                } while (++j < n && i.hasNext());
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -2160,7 +2211,9 @@ public final class Spliterators {
         }
 
         @Override
-        public int characteristics() { return characteristics; }
+        public int characteristics() {
+            return characteristics;
+        }
 
         @Override
         public Comparator<? super Long> getComparator() {
@@ -2192,8 +2245,8 @@ public final class Spliterators {
             this.it = iterator;
             this.est = size;
             this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
-                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
-                                   : characteristics;
+                    ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                    : characteristics;
         }
 
         /**
@@ -2223,7 +2276,9 @@ public final class Spliterators {
                     n = MAX_BATCH;
                 double[] a = new double[n];
                 int j = 0;
-                do { a[j] = i.nextDouble(); } while (++j < n && i.hasNext());
+                do {
+                    a[j] = i.nextDouble();
+                } while (++j < n && i.hasNext());
                 batch = j;
                 if (est != Long.MAX_VALUE) {
                     est -= j;
@@ -2256,7 +2311,9 @@ public final class Spliterators {
         }
 
         @Override
-        public int characteristics() { return characteristics; }
+        public int characteristics() {
+            return characteristics;
+        }
 
         @Override
         public Comparator<? super Double> getComparator() {
