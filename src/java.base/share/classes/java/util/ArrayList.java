@@ -1617,6 +1617,11 @@ public class ArrayList<E> extends AbstractList<E>
      */
     @Override
     public Spliterator<E> spliterator() {
+        /*
+            0 (origin)：表示从索引 0 开始遍历 ArrayList。即从列表的第一个元素开始。
+            -1 (fence)：表示遍历的结束位置。-1 通常表示一个特殊值，它意味着结束位置未明确指定。在大多数 Spliterator 的实现中，fence 值为 -1 会被解释为整个 ArrayList 的结束位置，即 ArrayList 的大小。因此，fence = -1 在此意味着遍历整个列表。
+            0 (expectedModCount)：表示预计在遍历过程中没有结构性修改。expectedModCount 是 modCount 的预期值，用来检测并发修改，如果在遍历过程中发生了结构性修改（如 add()、remove() 操作），则会触发 ConcurrentModificationException。0 表示不预期有结构修改。
+         */
         return new ArrayListSpliterator(0, -1, 0);
     }
 
@@ -1657,12 +1662,21 @@ public class ArrayList<E> extends AbstractList<E>
         private int fence; // -1 until used; then one past last index
         private int expectedModCount; // initialized when fence set
 
-        /** Creates new spliterator covering the given range. */
+        /**
+         * 构造函数，用于初始化 `ArrayListSpliterator` 实例。
+         * @param origin 起始索引，表示遍历 `ArrayList` 时从哪个元素开始。
+         * @param fence 结束位置，表示遍历 `ArrayList` 时到达哪个元素为止。 fence = -1 在此意味着遍历整个列表
+         * @param expectedModCount 预期的修改计数（`modCount`），用于检查结构性修改。 0 表示不预期有结构修改
+         */
         ArrayListSpliterator(int origin, int fence, int expectedModCount) {
+            // 初始化起始位置，表示当前分割器从哪个索引开始遍历。
             this.index = origin;
+            // 初始化结束位置，表示当前分割器将遍历到哪个索引的元素。
             this.fence = fence;
+            // 初始化预期的修改计数，用于并发修改检查。
             this.expectedModCount = expectedModCount;
         }
+
 
         private int getFence() { // initialize fence to size on first use
             int hi; // (a specialized variant appears in method forEach)

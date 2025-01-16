@@ -12,13 +12,12 @@ import java.util.function.Consumer;
  * @param <T> 返回的元素类型
  *
  * @since 1.5
- * @jls 14.14.2 增强型 {@code for} 循环语句
  */
 public interface Iterable<T> {
     /**
      * 返回一个迭代器，用于遍历类型为 {@code T} 的元素。
      *
-     * @return 返回一个 {@code Iterator} 对象。
+     * @return 一个 {@code Iterator} 对象。
      */
     Iterator<T> iterator();
 

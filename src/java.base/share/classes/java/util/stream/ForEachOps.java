@@ -26,16 +26,12 @@ package java.util.stream;
 
 import jdk.internal.invoke.MhUtil;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.concurrent.CountedCompleter;
-import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
-import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
-import java.util.function.LongConsumer;
-import java.lang.invoke.VarHandle;
-import java.lang.invoke.MethodHandles;
+import java.util.function.*;
 
 /**
  * Factory for creating instances of {@code TerminalOp} that perform an
@@ -57,7 +53,8 @@ import java.lang.invoke.MethodHandles;
  */
 final class ForEachOps {
 
-    private ForEachOps() { }
+    private ForEachOps() {
+    }
 
     /**
      * Constructs a {@code TerminalOp} that perform an action for every element
@@ -69,8 +66,7 @@ final class ForEachOps {
      * @param <T> the type of the stream elements
      * @return the {@code TerminalOp} instance
      */
-    public static <T> TerminalOp<T, Void> makeRef(Consumer<? super T> action,
-                                                  boolean ordered) {
+    public static <T> TerminalOp<T, Void> makeRef(Consumer<? super T> action, boolean ordered) {
         Objects.requireNonNull(action);
         return new ForEachOp.OfRef<>(action, ordered);
     }
@@ -254,9 +250,9 @@ final class ForEachOps {
     /** A {@code ForkJoinTask} for performing a parallel for-each operation */
     @SuppressWarnings("serial")
     static final class ForEachTask<S, T> extends CountedCompleter<Void> {
-        private Spliterator<S> spliterator;
         private final Sink<S> sink;
         private final PipelineHelper<T> helper;
+        private Spliterator<S> spliterator;
         private long targetSize;
 
         ForEachTask(PipelineHelper<T> helper,
@@ -289,7 +285,7 @@ final class ForEachOps {
             ForEachTask<S, T> task = this;
             while (!isShortCircuit || !taskSink.cancellationRequested()) {
                 if (sizeEstimate <= sizeThreshold ||
-                    (leftSplit = rightSplit.trySplit()) == null) {
+                        (leftSplit = rightSplit.trySplit()) == null) {
                     task.helper.copyInto(taskSink, rightSplit);
                     break;
                 }
@@ -301,8 +297,7 @@ final class ForEachOps {
                     rightSplit = leftSplit;
                     taskToFork = task;
                     task = leftTask;
-                }
-                else {
+                } else {
                     forkRight = true;
                     taskToFork = leftTask;
                 }
@@ -364,16 +359,15 @@ final class ForEachOps {
          * by the forEachOrdered operation.
          */
 
+        private static final VarHandle NEXT = MhUtil.findVarHandle(
+                MethodHandles.lookup(), "next", ForEachOrderedTask.class);
         private final PipelineHelper<T> helper;
-        private Spliterator<S> spliterator;
         private final long targetSize;
         private final Sink<T> action;
         private final ForEachOrderedTask<S, T> leftPredecessor;
+        private Spliterator<S> spliterator;
         private Node<T> node;
-
         private ForEachOrderedTask<S, T> next;
-        private static final VarHandle NEXT = MhUtil.findVarHandle(
-                MethodHandles.lookup(), "next", ForEachOrderedTask.class);
 
         protected ForEachOrderedTask(PipelineHelper<T> helper,
                                      Spliterator<S> spliterator,
@@ -397,21 +391,16 @@ final class ForEachOps {
             this.leftPredecessor = leftPredecessor;
         }
 
-        @Override
-        public final void compute() {
-            doCompute(this);
-        }
-
         private static <S, T> void doCompute(ForEachOrderedTask<S, T> task) {
             Spliterator<S> rightSplit = task.spliterator, leftSplit;
             long sizeThreshold = task.targetSize;
             boolean forkRight = false;
             while (rightSplit.estimateSize() > sizeThreshold &&
-                   (leftSplit = rightSplit.trySplit()) != null) {
+                    (leftSplit = rightSplit.trySplit()) != null) {
                 ForEachOrderedTask<S, T> leftChild =
-                    new ForEachOrderedTask<>(task, leftSplit, task.leftPredecessor);
+                        new ForEachOrderedTask<>(task, leftSplit, task.leftPredecessor);
                 ForEachOrderedTask<S, T> rightChild =
-                    new ForEachOrderedTask<>(task, rightSplit, leftChild);
+                        new ForEachOrderedTask<>(task, rightSplit, leftChild);
 
                 // leftChild and rightChild were just created and not fork():ed
                 // yet so no need for a volatile write
@@ -457,8 +446,7 @@ final class ForEachOps {
                     rightSplit = leftSplit;
                     task = leftChild;
                     taskToFork = rightChild;
-                }
-                else {
+                } else {
                     forkRight = true;
                     task = rightChild;
                     taskToFork = leftChild;
@@ -489,13 +477,17 @@ final class ForEachOps {
         }
 
         @Override
+        public final void compute() {
+            doCompute(this);
+        }
+
+        @Override
         public void onCompletion(CountedCompleter<?> caller) {
             if (node != null) {
                 // Dump buffered elements from this leaf into the sink
                 node.forEach(action);
                 node = null;
-            }
-            else if (spliterator != null) {
+            } else if (spliterator != null) {
                 // Dump elements output from this leaf's pipeline into the sink
                 helper.wrapAndCopyInto(action, spliterator);
                 spliterator = null;
@@ -506,7 +498,7 @@ final class ForEachOps {
             // of right subtree (if any, which can be this task's right sibling)
             //
             @SuppressWarnings("unchecked")
-            var leftDescendant = (ForEachOrderedTask<S, T>)NEXT.getAndSet(this, null);
+            var leftDescendant = (ForEachOrderedTask<S, T>) NEXT.getAndSet(this, null);
             if (leftDescendant != null)
                 leftDescendant.tryComplete();
         }

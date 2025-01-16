@@ -384,29 +384,20 @@ public final class Spliterators {
         }
     }
 
-    // Iterator-based spliterators
-
     /**
-     * Creates a {@code Spliterator} using the given collection's
-     * {@link java.util.Collection#iterator() iterator} as the source of elements, and
-     * reporting its {@link java.util.Collection#size() size} as its initial size.
+     * 将一个 {@link Collection} 转换为 {@link Spliterator}，用于支持流操作。
      *
-     * <p>The spliterator is
-     * <em><a href="Spliterator.html#binding">late-binding</a></em>, inherits
-     * the <em>fail-fast</em> properties of the collection's iterator, and
-     * implements {@code trySplit} to permit limited parallelism.
-     *
-     * @param <T> Type of elements
-     * @param c The collection
-     * @param characteristics Characteristics of this spliterator's source or
-     *        elements.  The characteristics {@code SIZED} and {@code SUBSIZED}
-     *        are additionally reported unless {@code CONCURRENT} is supplied.
-     * @return A spliterator from an iterator
-     * @throws NullPointerException if the given collection is {@code null}
+     * @param <T> 元素类型，表示集合中的元素类型
+     * @param c 需要转换为 {@link Spliterator} 的集合
+     * @param characteristics {@link Spliterator} 的特性标志，表示集合的特性（例如：是否有序、是否唯一等）
+     * @return 返回一个 {@link Spliterator}，用于遍历指定集合
+     * @throws NullPointerException 如果提供的集合为 null，则抛出空指针异常
      */
     public static <T> Spliterator<T> spliterator(Collection<? extends T> c, int characteristics) {
+        // 确保集合不为 null，如果是 null 则抛出 NullPointerException
         return new IteratorSpliterator<>(Objects.requireNonNull(c), characteristics);
     }
+
 
     /**
      * Creates a {@code Spliterator} using a given {@code Iterator}
@@ -949,9 +940,9 @@ public final class Spliterators {
          * which we ensure here by defining this class as final.
          */
         private final Object[] array;
-        private int index;        // current index, modified on advance/split
         private final int fence;  // one past last index
         private final int characteristics;
+        private int index;        // current index, modified on advance/split
         private long estimatedSize; // if >= 0, the estimated size, to help to split evenly
         // if -1, exact size is known to be fence - index
 
@@ -1068,9 +1059,9 @@ public final class Spliterators {
      */
     static final class IntArraySpliterator implements Spliterator.OfInt {
         private final int[] array;
-        private int index;        // current index, modified on advance/split
         private final int fence;  // one past last index
         private final int characteristics;
+        private int index;        // current index, modified on advance/split
         private long estimatedSize; // estimated size, to help to split evenly
 
         /**
@@ -1170,9 +1161,9 @@ public final class Spliterators {
      */
     static final class LongArraySpliterator implements Spliterator.OfLong {
         private final long[] array;
-        private int index;        // current index, modified on advance/split
         private final int fence;  // one past last index
         private final int characteristics;
+        private int index;        // current index, modified on advance/split
         private long estimatedSize; // estimated size, to help to split evenly
 
         /**
@@ -1272,9 +1263,9 @@ public final class Spliterators {
      */
     static final class DoubleArraySpliterator implements Spliterator.OfDouble {
         private final double[] array;
-        private int index;        // current index, modified on advance/split
         private final int fence;  // one past last index
         private final int characteristics;
+        private int index;        // current index, modified on advance/split
         private long estimatedSize; // estimated size, to help to split evenly
 
         /**
@@ -1421,15 +1412,6 @@ public final class Spliterators {
                     : additionalCharacteristics;
         }
 
-        static final class HoldingConsumer<T> implements Consumer<T> {
-            Object value;
-
-            @Override
-            public void accept(T value) {
-                this.value = value;
-            }
-        }
-
         /**
          * {@inheritDoc}
          *
@@ -1497,6 +1479,15 @@ public final class Spliterators {
         public int characteristics() {
             return characteristics;
         }
+
+        static final class HoldingConsumer<T> implements Consumer<T> {
+            Object value;
+
+            @Override
+            public void accept(T value) {
+                this.value = value;
+            }
+        }
     }
 
     /**
@@ -1546,15 +1537,6 @@ public final class Spliterators {
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
                     ? additionalCharacteristics | Spliterator.SUBSIZED
                     : additionalCharacteristics;
-        }
-
-        static final class HoldingIntConsumer implements IntConsumer {
-            int value;
-
-            @Override
-            public void accept(int value) {
-                this.value = value;
-            }
         }
 
         /**
@@ -1611,6 +1593,15 @@ public final class Spliterators {
         public int characteristics() {
             return characteristics;
         }
+
+        static final class HoldingIntConsumer implements IntConsumer {
+            int value;
+
+            @Override
+            public void accept(int value) {
+                this.value = value;
+            }
+        }
     }
 
     /**
@@ -1660,15 +1651,6 @@ public final class Spliterators {
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
                     ? additionalCharacteristics | Spliterator.SUBSIZED
                     : additionalCharacteristics;
-        }
-
-        static final class HoldingLongConsumer implements LongConsumer {
-            long value;
-
-            @Override
-            public void accept(long value) {
-                this.value = value;
-            }
         }
 
         /**
@@ -1725,6 +1707,15 @@ public final class Spliterators {
         public int characteristics() {
             return characteristics;
         }
+
+        static final class HoldingLongConsumer implements LongConsumer {
+            long value;
+
+            @Override
+            public void accept(long value) {
+                this.value = value;
+            }
+        }
     }
 
     /**
@@ -1774,15 +1765,6 @@ public final class Spliterators {
             this.characteristics = ((additionalCharacteristics & Spliterator.SIZED) != 0)
                     ? additionalCharacteristics | Spliterator.SUBSIZED
                     : additionalCharacteristics;
-        }
-
-        static final class HoldingDoubleConsumer implements DoubleConsumer {
-            double value;
-
-            @Override
-            public void accept(double value) {
-                this.value = value;
-            }
         }
 
         /**
@@ -1839,6 +1821,15 @@ public final class Spliterators {
         public int characteristics() {
             return characteristics;
         }
+
+        static final class HoldingDoubleConsumer implements DoubleConsumer {
+            double value;
+
+            @Override
+            public void accept(double value) {
+                this.value = value;
+            }
+        }
     }
 
     // Iterator-based Spliterators
@@ -1854,25 +1845,26 @@ public final class Spliterators {
         static final int MAX_BATCH = 1 << 25;  // 最大批量数组大小
 
         private final Collection<? extends T> collection; // 存储源集合（允许为 null）
-        private Iterator<? extends T> it; // 当前迭代器
         private final int characteristics; // 特征值
+        private Iterator<? extends T> it; // 当前迭代器
         private long est;  // 大小估计值
         private int batch; // 分割时的批次大小
 
+
         /**
-         * 使用给定集合的 {@link java.util.Collection#iterator() iterator} 创建一个 Spliterator，
-         * 并将集合的 {@link java.util.Collection#size() size} 作为初始大小报告。
-         *
-         * @param collection 源集合
-         * @param characteristics 此 Spliterator 的特性
+         * 构造一个 {@link IteratorSpliterator}，用于遍历集合并支持流操作。
+         * @param collection 要遍历的集合
+         * @param characteristics {@link Spliterator} 的特性标志（例如：是否有序、是否唯一等）
          */
         public IteratorSpliterator(Collection<? extends T> collection, int characteristics) {
-            this.collection = collection;
-            this.it = null; // 初始化时迭代器为 null
+            this.collection = collection;  // 将传入的集合赋值给成员变量
+            this.it = null;  // 初始化时，迭代器为 null，稍后会创建迭代器
+            // 如果特性标志没有包含 CONCURRENT (例如0)，则自动添加 SIZED 和 SUBSIZED 特性
             this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
                     ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
                     : characteristics;
         }
+
 
         /**
          * 使用给定的迭代器创建一个 Spliterator，报告给定的初始大小和特性。

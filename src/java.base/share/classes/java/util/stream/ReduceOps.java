@@ -24,23 +24,9 @@
  */
 package java.util.stream;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
-import java.util.OptionalLong;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.concurrent.CountedCompleter;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.DoubleBinaryOperator;
-import java.util.function.IntBinaryOperator;
-import java.util.function.LongBinaryOperator;
-import java.util.function.ObjDoubleConsumer;
-import java.util.function.ObjIntConsumer;
-import java.util.function.ObjLongConsumer;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * Factory for creating instances of {@code TerminalOp} that implement
@@ -50,7 +36,8 @@ import java.util.function.Supplier;
  */
 final class ReduceOps {
 
-    private ReduceOps() { }
+    private ReduceOps() {
+    }
 
     /**
      * Constructs a {@code TerminalOp} that implements a functional reduce on
@@ -152,8 +139,7 @@ final class ReduceOps {
      * @param collector a {@code Collector} defining the reduction
      * @return a {@code ReduceOp} implementing the reduction
      */
-    public static <T, I> TerminalOp<T, I>
-    makeRef(Collector<? super T, I, ?> collector) {
+    public static <T, I> TerminalOp<T, I> makeRef(Collector<? super T, I, ?> collector) {
         Supplier<I> supplier = Objects.requireNonNull(collector).supplier();
         BiConsumer<I, ? super T> accumulator = collector.accumulator();
         BinaryOperator<I> combiner = collector.combiner();
@@ -183,8 +169,8 @@ final class ReduceOps {
             @Override
             public int getOpFlags() {
                 return collector.characteristics().contains(Collector.Characteristics.UNORDERED)
-                       ? StreamOpFlag.NOT_ORDERED
-                       : 0;
+                        ? StreamOpFlag.NOT_ORDERED
+                        : 0;
             }
         };
     }
@@ -204,7 +190,7 @@ final class ReduceOps {
     public static <T, R> TerminalOp<T, R>
     makeRef(Supplier<R> seedFactory,
             BiConsumer<R, ? super T> accumulator,
-            BiConsumer<R,R> reducer) {
+            BiConsumer<R, R> reducer) {
         Objects.requireNonNull(seedFactory);
         Objects.requireNonNull(accumulator);
         Objects.requireNonNull(reducer);
@@ -247,7 +233,9 @@ final class ReduceOps {
     makeRefCounting() {
         return new ReduceOp<T, Long, CountingSink<T>>(StreamShape.REFERENCE) {
             @Override
-            public CountingSink<T> makeSink() { return new CountingSink.OfRef<>(); }
+            public CountingSink<T> makeSink() {
+                return new CountingSink.OfRef<>();
+            }
 
             @Override
             public <P_IN> Long evaluateSequential(PipelineHelper<T> helper,
@@ -342,8 +330,7 @@ final class ReduceOps {
                 if (empty) {
                     empty = false;
                     state = t;
-                }
-                else {
+                } else {
                     state = operator.applyAsInt(state, t);
                 }
             }
@@ -423,7 +410,9 @@ final class ReduceOps {
     makeIntCounting() {
         return new ReduceOp<Integer, Long, CountingSink<Integer>>(StreamShape.INT_VALUE) {
             @Override
-            public CountingSink<Integer> makeSink() { return new CountingSink.OfInt(); }
+            public CountingSink<Integer> makeSink() {
+                return new CountingSink.OfInt();
+            }
 
             @Override
             public <P_IN> Long evaluateSequential(PipelineHelper<Integer> helper,
@@ -518,8 +507,7 @@ final class ReduceOps {
                 if (empty) {
                     empty = false;
                     state = t;
-                }
-                else {
+                } else {
                     state = operator.applyAsLong(state, t);
                 }
             }
@@ -599,7 +587,9 @@ final class ReduceOps {
     makeLongCounting() {
         return new ReduceOp<Long, Long, CountingSink<Long>>(StreamShape.LONG_VALUE) {
             @Override
-            public CountingSink<Long> makeSink() { return new CountingSink.OfLong(); }
+            public CountingSink<Long> makeSink() {
+                return new CountingSink.OfLong();
+            }
 
             @Override
             public <P_IN> Long evaluateSequential(PipelineHelper<Long> helper,
@@ -694,8 +684,7 @@ final class ReduceOps {
                 if (empty) {
                     empty = false;
                     state = t;
-                }
-                else {
+                } else {
                     state = operator.applyAsDouble(state, t);
                 }
             }
@@ -775,7 +764,9 @@ final class ReduceOps {
     makeDoubleCounting() {
         return new ReduceOp<Double, Long, CountingSink<Double>>(StreamShape.DOUBLE_VALUE) {
             @Override
-            public CountingSink<Double> makeSink() { return new CountingSink.OfDouble(); }
+            public CountingSink<Double> makeSink() {
+                return new CountingSink.OfDouble();
+            }
 
             @Override
             public <P_IN> Long evaluateSequential(PipelineHelper<Double> helper,
@@ -800,6 +791,20 @@ final class ReduceOps {
                 return StreamOpFlag.NOT_ORDERED;
             }
         };
+    }
+
+    /**
+     * A type of {@code TerminalSink} that implements an associative reducing
+     * operation on elements of type {@code T} and producing a result of type
+     * {@code R}.
+     *
+     * @param <T> the type of input element to the combining operation
+     * @param <R> the result type
+     * @param <K> the type of the {@code AccumulatingSink}.
+     */
+    private interface AccumulatingSink<T, R, K extends AccumulatingSink<T, R, K>>
+            extends TerminalSink<T, R> {
+        void combine(K other);
     }
 
     /**
@@ -855,20 +860,6 @@ final class ReduceOps {
     }
 
     /**
-     * A type of {@code TerminalSink} that implements an associative reducing
-     * operation on elements of type {@code T} and producing a result of type
-     * {@code R}.
-     *
-     * @param <T> the type of input element to the combining operation
-     * @param <R> the result type
-     * @param <K> the type of the {@code AccumulatingSink}.
-     */
-    private interface AccumulatingSink<T, R, K extends AccumulatingSink<T, R, K>>
-            extends TerminalSink<T, R> {
-        void combine(K other);
-    }
-
-    /**
      * State box for a single state element, used as a base class for
      * {@code AccumulatingSink} instances
      *
@@ -877,7 +868,8 @@ final class ReduceOps {
     private abstract static class Box<U> {
         U state;
 
-        Box() {} // Avoid creation of special accessor
+        Box() {
+        } // Avoid creation of special accessor
 
         public U get() {
             return state;
@@ -933,7 +925,7 @@ final class ReduceOps {
      */
     @SuppressWarnings("serial")
     private static final class ReduceTask<P_IN, P_OUT, R,
-                                          S extends AccumulatingSink<P_OUT, R, S>>
+            S extends AccumulatingSink<P_OUT, R, S>>
             extends AbstractTask<P_IN, P_OUT, S, ReduceTask<P_IN, P_OUT, R, S>> {
         private final ReduceOp<P_OUT, R, S> op;
 

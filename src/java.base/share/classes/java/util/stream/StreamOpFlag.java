@@ -535,19 +535,24 @@ enum StreamOpFlag {
     }
 
     /**
-     * The bit mask for spliterator characteristics
+     * 用于 spliterator 特性的位掩码
+     * 该掩码用于筛选与 Spliterator 相关的特性标志。Spliterator 是 Java 中用于数据分割和流处理的接口，
+     * 它定义了如何将数据源分割成多个部分，并支持对这些部分进行并行或顺序处理。
      */
     static final int SPLITERATOR_CHARACTERISTICS_MASK = createMask(Type.SPLITERATOR);
 
     /**
-     * The bit mask for source stream flags.
+     * 用于源流标志的位掩码
+     * 该掩码用于筛选与源流相关的特性标志。源流标志描述了流的源头的一些属性，例如源流是否支持并行操作、是否是有限的等。
      */
     static final int STREAM_MASK = createMask(Type.STREAM);
 
     /**
-     * The bit mask for intermediate operation flags.
+     * 用于中间操作标志的位掩码
+     * 该掩码用于筛选与流的中间操作相关的特性标志。中间操作是指对流进行的转换操作，例如 `map`、`filter` 等。
      */
     static final int OP_MASK = createMask(Type.OP);
+
 
     /**
      * The bit mask for terminal operation flags.
@@ -733,30 +738,33 @@ enum StreamOpFlag {
         return streamFlags & SPLITERATOR_CHARACTERISTICS_MASK;
     }
 
+
     /**
-     * Converts a spliterator characteristic bit set to stream flags.
+     * 从给定的 Spliterator 获取其特性，并根据条件调整特性。
+     * 如果 Spliterator 具有排序特性且排序比较器不为 null，则只保留符合要求的排序特性。
      *
-     * @implSpec
-     * If the spliterator is naturally {@code SORTED} (the associated
-     * {@code Comparator} is {@code null}) then the characteristic is converted
-     * to the {@link #SORTED} flag, otherwise the characteristic is not
-     * converted.
-     *
-     * @param spliterator the spliterator from which to obtain characteristic
-     *        bit set.
-     * @return the stream flags.
+     * @param spliterator 需要处理的 Spliterator 对象，表示流的数据源。
+     * @return 返回根据条件调整后的特性标志（一个整数，表示该 Spliterator 的特性）。
      */
     static int fromCharacteristics(Spliterator<?> spliterator) {
+        // 获取 spliterator 的特性标志
         int characteristics = spliterator.characteristics();
+
+        // 检查 spliterator 是否具有排序特性（SORTED），并且是否有排序比较器（getComparator()）
+        // 如果排序特性存在，并且排序比较器不为 null，则说明该 Spliterator 具有自定义排序
         if ((characteristics & Spliterator.SORTED) != 0 && spliterator.getComparator() != null) {
-            // Do not propagate the SORTED characteristic if it does not correspond
-            // to a natural sort order
+            // 如果排序比较器不符合预期（不是自然排序），则移除 SORTED 特性
+            // SPLITERATOR_CHARACTERISTICS_MASK 是一个常量，确保仅保留有效的标志
+            // ~Spliterator.SORTED 会清除特性标志中的 SORTED 位
             return characteristics & SPLITERATOR_CHARACTERISTICS_MASK & ~Spliterator.SORTED;
         }
         else {
+            // 如果没有排序特性，或者排序特性符合要求（例如自然排序），则保持原特性
+            // 仍然使用 SPLITERATOR_CHARACTERISTICS_MASK 来屏蔽掉不需要的标志
             return characteristics & SPLITERATOR_CHARACTERISTICS_MASK;
         }
     }
+
 
     /**
      * Converts a spliterator characteristic bit set to stream flags.

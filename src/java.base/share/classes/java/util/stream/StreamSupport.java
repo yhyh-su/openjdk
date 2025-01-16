@@ -43,32 +43,16 @@ public final class StreamSupport {
     private StreamSupport() {}
 
     /**
-     * Creates a new sequential or parallel {@code Stream} from a
-     * {@code Spliterator}.
-     *
-     * <p>The spliterator is only traversed, split, or queried for estimated
-     * size after the terminal operation of the stream pipeline commences.
-     *
-     * <p>It is strongly recommended the spliterator report a characteristic of
-     * {@code IMMUTABLE} or {@code CONCURRENT}, or be
-     * <a href="../Spliterator.html#binding">late-binding</a>.  Otherwise,
-     * {@link #stream(java.util.function.Supplier, int, boolean)} should be used
-     * to reduce the scope of potential interference with the source.  See
-     * <a href="package-summary.html#NonInterference">Non-Interference</a> for
-     * more details.
-     *
-     * @param <T> the type of stream elements
-     * @param spliterator a {@code Spliterator} describing the stream elements
-     * @param parallel if {@code true} then the returned stream is a parallel
-     *        stream; if {@code false} the returned stream is a sequential
-     *        stream.
-     * @return a new sequential or parallel {@code Stream}
+     * @description 通过给定的 Spliterator 分割器 创建一个新的 Stream
+     * @param spliterator 提供流元素的 Spliterator。Spliterator 是对一个集合的元素进行遍历、拆分和计算的抽象。它定义了元素的遍历方式，并可以支持并行遍历
+     * @param parallel 一个布尔值 指示生成的流是否应该是并行流。如果为 true，则返回并行流；如果为 false，则返回顺序流
+     * @return java.util.stream.Stream<T>
      */
     public static <T> Stream<T> stream(Spliterator<T> spliterator, boolean parallel) {
         Objects.requireNonNull(spliterator);
         return new ReferencePipeline.Head<>(spliterator,
-                                            StreamOpFlag.fromCharacteristics(spliterator),
-                                            parallel);
+                StreamOpFlag.fromCharacteristics(spliterator),
+                parallel);
     }
 
     /**

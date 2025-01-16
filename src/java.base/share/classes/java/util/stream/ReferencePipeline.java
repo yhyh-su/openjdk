@@ -24,31 +24,10 @@
  */
 package java.util.stream;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
-import java.util.function.DoublePredicate;
-import java.util.function.Function;
-import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
-import java.util.function.IntPredicate;
-import java.util.function.LongConsumer;
-import java.util.function.LongPredicate;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
 import jdk.internal.access.SharedSecrets;
+
+import java.util.*;
+import java.util.function.*;
 
 /**
  * Abstract base class for an intermediate pipeline stage or pipeline source
@@ -61,7 +40,7 @@ import jdk.internal.access.SharedSecrets;
  */
 abstract class ReferencePipeline<P_IN, P_OUT>
         extends AbstractPipeline<P_IN, P_OUT, Stream<P_OUT>>
-        implements Stream<P_OUT>  {
+        implements Stream<P_OUT> {
 
     /**
      * Constructor for the head of a stream pipeline.
@@ -101,18 +80,18 @@ abstract class ReferencePipeline<P_IN, P_OUT>
         super(upstream, opFlags);
     }
 
-     /**
-      * Constructor for appending an intermediate operation onto an existing
-      * pipeline.
-      *
-      * @param upupstream the upstream of the upstream element source
-      * @param upstream the upstream element source
-      * @param opFlags The operation flags for this operation, described in
-      *        {@link StreamOpFlag}
-      */
-     protected ReferencePipeline(AbstractPipeline<?, P_IN, ?> upupstream, AbstractPipeline<?, P_IN, ?> upstream, int opFlags) {
-         super(upupstream, upstream, opFlags);
-     }
+    /**
+     * Constructor for appending an intermediate operation onto an existing
+     * pipeline.
+     *
+     * @param upupstream the upstream of the upstream element source
+     * @param upstream the upstream element source
+     * @param opFlags The operation flags for this operation, described in
+     *        {@link StreamOpFlag}
+     */
+    protected ReferencePipeline(AbstractPipeline<?, P_IN, ?> upupstream, AbstractPipeline<?, P_IN, ?> upstream, int opFlags) {
+        super(upupstream, upstream, opFlags);
+    }
 
     // Shape-specific methods
 
@@ -123,16 +102,16 @@ abstract class ReferencePipeline<P_IN, P_OUT>
 
     @Override
     final <P_IN> Node<P_OUT> evaluateToNode(PipelineHelper<P_OUT> helper,
-                                        Spliterator<P_IN> spliterator,
-                                        boolean flattenTree,
-                                        IntFunction<P_OUT[]> generator) {
+                                            Spliterator<P_IN> spliterator,
+                                            boolean flattenTree,
+                                            IntFunction<P_OUT[]> generator) {
         return Nodes.collect(helper, spliterator, flattenTree, generator);
     }
 
     @Override
     final <P_IN> Spliterator<P_OUT> wrap(PipelineHelper<P_OUT> ph,
-                                     Supplier<Spliterator<P_IN>> supplier,
-                                     boolean isParallel) {
+                                         Supplier<Spliterator<P_IN>> supplier,
+                                         boolean isParallel) {
         return new StreamSpliterators.WrappingSpliterator<>(ph, supplier, isParallel);
     }
 
@@ -144,7 +123,8 @@ abstract class ReferencePipeline<P_IN, P_OUT>
     @Override
     final boolean forEachWithCancel(Spliterator<P_OUT> spliterator, Sink<P_OUT> sink) {
         boolean cancelled;
-        do { } while (!(cancelled = sink.cancellationRequested()) && spliterator.tryAdvance(sink));
+        do {
+        } while (!(cancelled = sink.cancellationRequested()) && spliterator.tryAdvance(sink));
         return cancelled;
     }
 
@@ -203,21 +183,42 @@ abstract class ReferencePipeline<P_IN, P_OUT>
 
     @Override
     @SuppressWarnings("unchecked")
+    /**
+     * 将当前流中的元素应用一个映射函数，并返回一个新的流。此操作是中间操作，返回一个新的流。
+     *
+     * @param mapper 映射函数，用于将每个元素从类型 P_OUT 转换为类型 R
+     * @param <R> 返回流的元素类型
+     * @return 返回一个新的流，其中包含通过映射函数处理后的元素
+     */
     public final <R> Stream<R> map(Function<? super P_OUT, ? extends R> mapper) {
+        // 检查 mapper 函数是否为 null，防止空指针异常
         Objects.requireNonNull(mapper);
+        // 创建一个无状态的操作，表示一个无状态的映射操作
         return new StatelessOp<>(this, StreamShape.REFERENCE,
                 StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
+
+            /**
+             * 这个方法用于将下游的 Sink（接收数据的容器）包装成一个新的 Sink
+             * 这个新的 Sink 会将元素传递给映射函数进行处理
+             *
+             * @param flags 操作的标志
+             * @param sink 下游的 Sink（接收数据的容器）
+             * @return 返回一个新的 Sink，这个 Sink 将会应用映射操作
+             */
             @Override
             Sink<P_OUT> opWrapSink(int flags, Sink<R> sink) {
+                // 创建一个 ChainedReference Sink，它会将处理后的结果传递给下游
                 return new Sink.ChainedReference<>(sink) {
                     @Override
                     public void accept(P_OUT u) {
+                        // 将当前元素应用映射函数 mapper，并将结果传递给下游 Sink
                         downstream.accept(mapper.apply(u));
                     }
                 };
             }
         };
     }
+
 
     @Override
     public final IntStream mapToInt(ToIntFunction<? super P_OUT> mapper) {
@@ -281,8 +282,15 @@ abstract class ReferencePipeline<P_IN, P_OUT>
                 final class FlatMap implements Sink<P_OUT>, Predicate<R> {
                     boolean cancel;
 
-                    @Override public void begin(long size) { sink.begin(-1); }
-                    @Override public void end() { sink.end(); }
+                    @Override
+                    public void begin(long size) {
+                        sink.begin(-1);
+                    }
+
+                    @Override
+                    public void end() {
+                        sink.end();
+                    }
 
                     @Override
                     public void accept(P_OUT e) {
@@ -324,16 +332,23 @@ abstract class ReferencePipeline<P_IN, P_OUT>
             @Override
             Sink<P_OUT> opWrapSink(int flags, Sink<Integer> sink) {
                 IntConsumer fastPath =
-                    isShortCircuitingPipeline()
-                        ? null
-                        : (sink instanceof IntConsumer ic)
-                            ? ic
-                            : sink::accept;
+                        isShortCircuitingPipeline()
+                                ? null
+                                : (sink instanceof IntConsumer ic)
+                                ? ic
+                                : sink::accept;
                 final class FlatMap implements Sink<P_OUT>, IntPredicate {
                     boolean cancel;
 
-                    @Override public void begin(long size) { sink.begin(-1); }
-                    @Override public void end() { sink.end(); }
+                    @Override
+                    public void begin(long size) {
+                        sink.begin(-1);
+                    }
+
+                    @Override
+                    public void end() {
+                        sink.end();
+                    }
 
                     @Override
                     public void accept(P_OUT e) {
@@ -375,16 +390,23 @@ abstract class ReferencePipeline<P_IN, P_OUT>
             @Override
             Sink<P_OUT> opWrapSink(int flags, Sink<Double> sink) {
                 DoubleConsumer fastPath =
-                    isShortCircuitingPipeline()
-                        ? null
-                        : (sink instanceof DoubleConsumer dc)
-                            ? dc
-                            : sink::accept;
+                        isShortCircuitingPipeline()
+                                ? null
+                                : (sink instanceof DoubleConsumer dc)
+                                ? dc
+                                : sink::accept;
                 final class FlatMap implements Sink<P_OUT>, DoublePredicate {
                     boolean cancel;
 
-                    @Override public void begin(long size) { sink.begin(-1); }
-                    @Override public void end() { sink.end(); }
+                    @Override
+                    public void begin(long size) {
+                        sink.begin(-1);
+                    }
+
+                    @Override
+                    public void end() {
+                        sink.end();
+                    }
 
                     @Override
                     public void accept(P_OUT e) {
@@ -427,16 +449,23 @@ abstract class ReferencePipeline<P_IN, P_OUT>
             @Override
             Sink<P_OUT> opWrapSink(int flags, Sink<Long> sink) {
                 LongConsumer fastPath =
-                    isShortCircuitingPipeline()
-                        ? null
-                        : (sink instanceof LongConsumer lc)
-                            ? lc
-                            : sink::accept;
+                        isShortCircuitingPipeline()
+                                ? null
+                                : (sink instanceof LongConsumer lc)
+                                ? lc
+                                : sink::accept;
                 final class FlatMap implements Sink<P_OUT>, LongPredicate {
                     boolean cancel;
 
-                    @Override public void begin(long size) { sink.begin(-1); }
-                    @Override public void end() { sink.end(); }
+                    @Override
+                    public void begin(long size) {
+                        sink.begin(-1);
+                    }
+
+                    @Override
+                    public void end() {
+                        sink.end();
+                    }
 
                     @Override
                     public void accept(P_OUT e) {
@@ -511,7 +540,7 @@ abstract class ReferencePipeline<P_IN, P_OUT>
                     @Override
                     @SuppressWarnings("unchecked")
                     public void accept(P_OUT u) {
-                        mapper.accept(u, (IntConsumer)downstream);
+                        mapper.accept(u, (IntConsumer) downstream);
                     }
                 };
             }
@@ -654,7 +683,7 @@ abstract class ReferencePipeline<P_IN, P_OUT>
         @SuppressWarnings("rawtypes")
         IntFunction rawGenerator = generator;
         return (A[]) Nodes.flatten(evaluateToArrayNode(rawGenerator), rawGenerator)
-                              .asArray(rawGenerator);
+                .asArray(rawGenerator);
     }
 
     @Override
@@ -722,19 +751,18 @@ abstract class ReferencePipeline<P_IN, P_OUT>
             container = collector.supplier().get();
             BiConsumer<A, ? super P_OUT> accumulator = collector.accumulator();
             forEach(u -> accumulator.accept(container, u));
-        }
-        else {
+        } else {
             container = evaluate(ReduceOps.makeRef(collector));
         }
         return collector.characteristics().contains(Collector.Characteristics.IDENTITY_FINISH)
-               ? (R) container
-               : collector.finisher().apply(container);
+                ? (R) container
+                : collector.finisher().apply(container);
     }
 
     @Override
     public <R> R collect(Supplier<R> supplier,
-                               BiConsumer<R, ? super P_OUT> accumulator,
-                               BiConsumer<R, R> combiner) {
+                         BiConsumer<R, ? super P_OUT> accumulator,
+                         BiConsumer<R, R> combiner) {
         return evaluate(ReduceOps.makeRef(supplier, accumulator, combiner));
     }
 
@@ -784,8 +812,7 @@ abstract class ReferencePipeline<P_IN, P_OUT>
          * @param sourceFlags the source flags for the stream source, described
          *                    in {@link StreamOpFlag}
          */
-        Head(Spliterator<?> source,
-             int sourceFlags, boolean parallel) {
+        Head(Spliterator<?> source, int sourceFlags, boolean parallel) {
             super(source, sourceFlags, parallel);
         }
 
@@ -805,8 +832,7 @@ abstract class ReferencePipeline<P_IN, P_OUT>
         public void forEach(Consumer<? super E_OUT> action) {
             if (!isParallel()) {
                 sourceStageSpliterator().forEachRemaining(action);
-            }
-            else {
+            } else {
                 super.forEach(action);
             }
         }
@@ -815,8 +841,7 @@ abstract class ReferencePipeline<P_IN, P_OUT>
         public void forEachOrdered(Consumer<? super E_OUT> action) {
             if (!isParallel()) {
                 sourceStageSpliterator().forEachRemaining(action);
-            }
-            else {
+            } else {
                 super.forEachOrdered(action);
             }
         }
